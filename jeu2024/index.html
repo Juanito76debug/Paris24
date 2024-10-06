@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paris-JO2024</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!--Accueil accès-->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="#">Paris 2024</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Accueil</a>
+          </li>
+          <li></li>
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">A propos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="login.html">Connexion</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="register.html">Inscription</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container mt-5">
+      <img
+        src="assets/tr-eiffel.avif"
+        alt="Tour Eiffel"
+        class="presentation-image"
+      />
+      <div class="container mt-3">
+        <h1 class="display-4">
+          Bienvenue à Paris pour les Jeux Olympiques 2024
+          <img src="assets/phryge.png" alt="Phryge" class="inline-image" />
+        </h1>
+        <p class="lead">
+          Venez nous rejoindre pour les célébrer, accéder à votre profil,
+          partager des messages et communiquer avec d'autres membres en vous
+          connectant.
+        </p>
+        <hr class="my-4" />
+        <p>
+          Si vous ne disposez pas encore d'un compte, vous pouvez vous inscrire
+          dès maintenant afin de vous joindre à la communauté.
+        </p>
+
+        <p class="lead">
+          <a class="btn btn-primary btn-lg" href="register.html" role="button"
+            >Ici</a
+          >
+        </p>
+      </div>
+      <!--nombre de messages publiés en temps réel-->
+      <div class="card" style="width: 18rem"></div>
+
+      <div class="card-body">
+        <h5 class="card-title">Statistiques en temps réel</h5>
+        <p class="card-text">
+          Nombre de messages publiés en temps réel :
+          <span id="messageCount">0</span>
+        </p>
+
+        <!--nombre de message connectés en temps réel-->
+        <p class="card-text">
+          Nombre de membres connectés en temps réel :
+          <span id="onlineUserCount">0</span>
+        </p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="scripts.js"></script>
+  </body>
+</html>
