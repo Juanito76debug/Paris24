@@ -34,3 +34,42 @@ window.onload = function () {
     setInterval(fetchOnlineUsersCount, 5000);
   });
 };
+
+// Formulaire d'inscription pour l'utilisateur
+
+const registerForm = document.getElementById("registerForm");
+const errorMessages = document.getElementById("errorMessages");
+
+if (registerForm) {
+  registerForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    fetch("/api/users/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, email, password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Inscription avec succès !");
+          window.location.href = "login.html";
+        } else {
+          errorMessages.style.display = "block";
+          errorMessages.innerHTML = data.errors
+            .map((error) => `<p>${error.msg}</p>`)
+            .join("");
+        }
+      })
+      .catch((error) => {
+        console.error("Erreur lors de l'enregistrement :", error);
+        alert("Erreur lors de l'enregistrement : " + error.message);
+      });
+  });
+}

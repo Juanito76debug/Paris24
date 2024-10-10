@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
 import { Server } from "socket.io";
 import http from "http";
 import jwt from "jsonwebtoken";
+import { body, validationResult } from "express-validator";
 
 const authenticateJWT = (req, res, next) => {
   const token = req.header("Authorization")?.split(" ")[1];
@@ -46,12 +47,42 @@ const postSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  username: String,
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   online: { type: Boolean, default: false },
 });
 
 const Post = mongoose.model("Post", postSchema);
 const User = mongoose.model("User", userSchema);
+
+//Ajout de nodemailer
+const sendEmailConfirmation = async (email, subject, message) => {
+  try {
+    // Création du transporteur Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // Utiliser l'email défini dans .env
+        pass: process.env.EMAIL_PASS, // Utiliser le mot de passe défini dans .env
+      },
+    });
+
+    // Configuration de l'email
+    const mailOptions = {
+      from: process.env.EMAIL_USER, // L'email de l'expéditeur
+      to: email,
+      subject: subject,
+      text: message,
+    };
+
+    // Envoi de l'email
+    await transporter.sendMail(mailOptions);
+    console.log(`Email envoyé avec succès à ${email}`);
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de l'email:", error);
+  }
+};
 // message publiés en temps réel.
 app.get("/api/messageCount", async (req, res) => {
   try {
@@ -82,6 +113,36 @@ app.get("/register", (req, res) => {
 app.get("/about", (req, res) => {
   res.sendFile(path.join(__dirname, "about.html"));
 });
+// Route pour gérer l'inscription des utilisateurs avec vérifications.
+app.post(
+  "/api/users/register",
+  [
+    body("username")
+      .isLength({ min: 3 })
+      .withMessage("minimum 3 caractères pour le nom d'utilisateur"),
+    body("email").isEmail().withMessage("Email non validé"),
+    body("password")
+      .isLength({ min: 6 })
+      .withMessage("6 caractères au moins pour le mot de passe"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const { username, email, password } = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User({ username, email, password: hashedPassword });
+      await user.save();
+      res
+        .status(201)
+        .json({ success: true, message: "Utilisateur créé avec succès" });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "err.message" });
+    }
+  }
+);
 
 app.listen(port, () => {
   console.log(`Serveur en écoute sur http://localhost:${port}`);

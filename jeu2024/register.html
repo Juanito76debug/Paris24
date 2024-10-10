@@ -47,6 +47,12 @@
         <div class="col-md-6">
           <div class="card-body">
             <h5 class="card-title">Inscription</h5>
+            <!--Si les donnes ne sont pas valides, on affiche à nouveau, le formulaire accompagné d'un message d'erreur-->
+            <div
+              id="errorMessages"
+              class="alert alert-danger"
+              style="display: none"
+            ></div>
             <form id="registerForm">
               <div class="form-label">
                 <label for="username">Nom d'utilisateur</label>
