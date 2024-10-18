@@ -31,6 +31,11 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const mongoOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true, // Utilisation de `createIndex` plutôt que `ensureIndex`
+};
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -108,17 +113,17 @@ app.get("/api/online", async (req, res) => {
   }
 });
 // Route pour servir le fichier HTML de la page d'accueil
-app.get("/", (req, res) => {
+app.get("api/index", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // Route pour servir le fichier HTML de la page d'inscription
-app.get("/register", (req, res) => {
+app.get("api/register", (req, res) => {
   res.sendFile(path.join(__dirname, "register.html"));
 });
 
 // Route pour servir le fichier HTML de la page "À propos"
-app.get("/about", (req, res) => {
+app.get("api/about", (req, res) => {
   res.sendFile(path.join(__dirname, "about.html"));
 });
 
@@ -135,11 +140,11 @@ app.post(
       .withMessage("6 caractères au moins pour le mot de passe"),
   ],
   async (req, res) => {
-    console.log("Données reçues :", req.body); // Ajouté pour le débogage
+    console.log("Données reçues :", req.body); // Débogage
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log("Erreurs de validation :", errors.array()); // Ajouté pour le débogage
+      console.log("Erreurs de validation :", errors.array()); // Débogage
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -154,8 +159,8 @@ app.post(
       await user.save();
 
       // Envoi d'un email de confirmation
-      const subject = "Confirmation d'inscription";
-      const message = "Merci de vous être inscrit !";
+      const subject = "inscription confirmée";
+      const message = "vous êtes inscrit !";
 
       await sendEmailConfirmation(email, subject, message);
 
@@ -168,14 +173,15 @@ app.post(
     }
   }
 );
+//Route pour gérer l'inscription des utilisateurs avec vérifications
 
 app.post(
   "/api/login",
   [
-    body("email").isEmail().withMessage("Email invalide"),
+    body("username").notEmpty().withMessage("Pseudonyme nécessaire"),
     body("password")
       .isLength({ min: 6 })
-      .withMessage("6 caractères au moins pour le mot de passe"),
+      .withMessage("6 caractères au moins pour password"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -183,18 +189,18 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
     try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
+      const { username, password } = req.body;
+      const user = await User.findOne({ username });
       if (!user) {
         return res
           .status(401)
-          .json({ error: "Email ou mot de passe incorrect" });
+          .json({ error: "Pseudonyme ou password incorrect" });
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res
           .status(401)
-          .json({ error: "Email ou mot de passe incorrect" });
+          .json({ error: "Pseudonyme ou mot de passe incorrect" });
       }
       // Création du token JWT
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
@@ -205,6 +211,52 @@ app.post(
       res
         .status(500)
         .json({ success: false, message: "Erreur lors de la connexion" });
+    }
+  }
+);
+
+// Route pour gérer la réinitialisation du password
+app.post(
+  "/api/forgot-password",
+  [body("email").isEmail().withMessage("Email non validé")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res
+          .status(404)
+          .json({ error: "Aucun utilisateur avec cet email trouvé" });
+      }
+      const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+        expiresIN: "1h",
+      });
+      const resetLink =
+        "http://localhost:3000/reset-password?token=${resetToken}";
+      const subject = "Réinitialisation du mot de passe";
+      const message =
+        "Cliquez ici pour réinitialiser votre mot de passe : $(resetlink)";
+      await sendEmailConfirmation(email, sibject, message);
+
+      res.json({
+        success: true,
+        message: "Un email de réinitialisation a été envoyé",
+      });
+    } catch (err) {
+      console.error(
+        "Erreur lors de la réinitialisation du mot de passe :",
+        err
+      );
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Erreur lors de la réinitialisation du mot de passe",
+        });
     }
   }
 );

@@ -10,7 +10,10 @@ window.onload = function () {
           return response.json();
         })
         .then((data) => {
-          document.getElementById("messageCount").textContent = data.count;
+          const messageCountElem = document.getElementById("messageCount");
+          if (messageCountElem) {
+            messageCountElem.textContent = data.count;
+          }
         })
         .catch((error) => {
           console.error("Error fetching message count:", error);
@@ -27,7 +30,11 @@ window.onload = function () {
           return response.json();
         })
         .then((data) => {
-          document.getElementById("onlineUserCount").textContent = data.count;
+          const onlineUserCountElem =
+            document.getElementById("onlineUserCount");
+          if (onlineUserCountElem) {
+            onlineUserCountElem.textContent = data.count;
+          }
         })
         .catch((error) => {
           console.error(
@@ -56,6 +63,10 @@ if (registerForm) {
     const username = document.getElementById("username").value;
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+
+    console.log("Username:", username);
+    console.log("Email:", email);
+    console.log("Password:", password);
 
     fetch("http://localhost:3000/api/register", {
       method: "POST",
@@ -92,23 +103,20 @@ if (registerForm) {
 
 // formulaire de connexion pour l'utilisateur
 const loginForm = document.getElementById("loginForm");
-const errorMessagesLogin = document.getElementById("errorMessagesLogin");
+const errorMessagesLogin = document.getElementById("errorMessagesLogin"); //Erreur si les données ne sont pas valides.
 
 if (loginForm) {
   loginForm.addEventListener("submit", function (event) {
     event.preventDefault();
-    const formData = new FormData(loginForm);
-    const data = {
-      email: formData.get("email"),
-      password: formData.get("password"),
-    };
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
     fetch("http://localhost:3000/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ username, password }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -118,10 +126,11 @@ if (loginForm) {
         }
         return response.json();
       })
+      // affichage de l'utilisateur vers la page de profil.
       .then((data) => {
         if (data.success) {
           alert("Connexion réussie!");
-          window.location.href = "index.html";
+          window.location.href = "profile.html";
         } else {
           errorMessagesLogin.style.display = "block";
           errorMessagesLogin.innerHTML = (data.errors || [])
@@ -134,4 +143,61 @@ if (loginForm) {
         alert("Erreur lors de la connexion : " + error.message);
       });
   });
+  // Vérification du mormulaire de réinitialisation du mot de passe
+  const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+  const errorMessagesForgotPassword = document.getElementById(
+    "errorMessagesForgotPassword"
+  );
+  if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const email = document.getElementById("email").value;
+
+      if (!forgotPasswordForm.checkValidity()) {
+        event.stopPropagation();
+        forgotPasswordForm.classList.add("was-validated");
+        return;
+      }
+      fetch("http://localhost:3000/api/forgotPassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((data) => {
+              throw new Error(data.message || "Password reset failed");
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.success) {
+            alert("Email de réinitialisation du mot de passe envoyé!");
+          } else {
+            errorMessagesForgotPassword.style.display = "block";
+            errorMessagesForgotPassword.innerHTML = (data.errors || [])
+              .map((error) => `<p>${error.msg}</p>`)
+              .join("");
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Erreur lors de la réinitialisation du mot de passe :",
+            error
+          );
+          alert(
+            "Erreur lors de la réinitialisation du mot de passe : " +
+              error.message
+          );
+        });
+    });
+  }
+
+  function getUserType() {
+    const userType = localStorage.getItem("userType");
+    return userType || "visitor";
+  }
 }
