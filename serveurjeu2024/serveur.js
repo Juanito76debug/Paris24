@@ -1,48 +1,27 @@
 import express from "express";
 import path from "path";
-import bodyParser from "body-parser";
-import nodemailer from "nodemailer";
-import cors from "cors";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
-import { Server } from "socket.io";
-import http from "http";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import nodemailer from "nodemailer";
+import cors from "cors";
 import { body, validationResult } from "express-validator";
-
-const authenticateJWT = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ error: "Accès refusé. Aucun token fourni." });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Vous pouvez ensuite utiliser req.user dans vos routes
-    next();
-  } catch (err) {
-    res.status(400).json({ error: "Token invalide." });
-  }
-};
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const mongoOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true, // Utilisation de `createIndex` plutôt que `ensureIndex`
-};
 
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join("C:/Users/juan_/Documents/Paris24/jeu2024")));
 
 mongoose
-  .connect("mongodb://localhost:27017/jeu2024")
+  .connect("mongodb://localhost:27017/jeu2024", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connexion à MongoDB réussie"))
   .catch((err) => console.error("Erreur de connexion à MongoDB:", err));
 
@@ -61,27 +40,23 @@ const userSchema = new mongoose.Schema({
 const Post = mongoose.model("Post", postSchema);
 const User = mongoose.model("User", userSchema);
 
-// Ajout de nodemailer
 const sendEmailConfirmation = async (email, subject, message) => {
   try {
-    // Création du transporteur Nodemailer
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // Utiliser l'email défini dans .env
-        pass: process.env.EMAIL_PASS, // Utiliser le mot de passe défini dans .env
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    // Configuration de l'email
     const mailOptions = {
-      from: process.env.EMAIL_USER, // L'email de l'expéditeur
+      from: process.env.EMAIL_USER,
       to: email,
       subject: subject,
       text: message,
     };
 
-    // Envoi de l'email
     await transporter.sendMail(mailOptions);
     console.log(`Email envoyé avec succès à ${email}`);
   } catch (error) {
@@ -89,7 +64,6 @@ const sendEmailConfirmation = async (email, subject, message) => {
   }
 };
 
-// Messages publiés en temps réel
 app.get("/api/messageCount", async (req, res) => {
   try {
     const count = await Post.countDocuments();
@@ -101,33 +75,31 @@ app.get("/api/messageCount", async (req, res) => {
   }
 });
 
-// Membres connectés en temps réel
 app.get("/api/online", async (req, res) => {
   try {
     const users = await User.countDocuments({ online: true });
     res.json(users);
   } catch (err) {
-    res.status(500).json({
-      error: "Erreur lors de la récupération des utilisateurs connectés",
-    });
+    res
+      .status(500)
+      .json({
+        error: "Erreur lors de la récupération des utilisateurs connectés",
+      });
   }
 });
-// Route pour servir le fichier HTML de la page d'accueil
-app.get("api/index", (req, res) => {
+
+app.get("/api/index", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Route pour servir le fichier HTML de la page d'inscription
-app.get("api/register", (req, res) => {
+app.get("/api/register", (req, res) => {
   res.sendFile(path.join(__dirname, "register.html"));
 });
 
-// Route pour servir le fichier HTML de la page "À propos"
-app.get("api/about", (req, res) => {
+app.get("/api/about", (req, res) => {
   res.sendFile(path.join(__dirname, "about.html"));
 });
 
-// Route pour gérer l'inscription des utilisateurs avec vérifications
 app.post(
   "/api/register",
   [
@@ -140,28 +112,22 @@ app.post(
       .withMessage("6 caractères au moins pour le mot de passe"),
   ],
   async (req, res) => {
-    console.log("Données reçues :", req.body); // Débogage
+    console.log("Données reçues :", req.body);
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log("Erreurs de validation :", errors.array()); // Débogage
+      console.log("Erreurs de validation :", errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     try {
       const { username, email, password } = req.body;
-
-      // Hachage du mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Création de l'utilisateur
       const user = new User({ username, email, password: hashedPassword });
       await user.save();
 
-      // Envoi d'un email de confirmation
-      const subject = "inscription confirmée";
-      const message = "vous êtes inscrit !";
-
+      const subject = "Inscription confirmée";
+      const message = "Vous êtes inscrit !";
       await sendEmailConfirmation(email, subject, message);
 
       res.json({ success: true, message: "Inscription réussie" });
@@ -173,7 +139,6 @@ app.post(
     }
   }
 );
-//Route pour gérer l'inscription des utilisateurs avec vérifications
 
 app.post(
   "/api/login",
@@ -181,7 +146,7 @@ app.post(
     body("username").notEmpty().withMessage("Pseudonyme nécessaire"),
     body("password")
       .isLength({ min: 6 })
-      .withMessage("6 caractères au moins pour password"),
+      .withMessage("6 caractères au moins pour le mot de passe"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -194,7 +159,7 @@ app.post(
       if (!user) {
         return res
           .status(401)
-          .json({ error: "Pseudonyme ou password incorrect" });
+          .json({ error: "Pseudonyme ou mot de passe incorrect" });
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
@@ -202,7 +167,6 @@ app.post(
           .status(401)
           .json({ error: "Pseudonyme ou mot de passe incorrect" });
       }
-      // Création du token JWT
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
@@ -215,7 +179,6 @@ app.post(
   }
 );
 
-// Route pour gérer la réinitialisation du password
 app.post(
   "/api/forgot-password",
   [body("email").isEmail().withMessage("Email non validé")],
@@ -232,25 +195,24 @@ app.post(
           .status(404)
           .json({ error: "Aucun utilisateur avec cet email trouvé" });
       }
+      const newPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
       const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-        expiresIN: "1h",
+        expiresIn: "1h",
       });
-      const resetLink =
-        "http://localhost:3000/reset-password?token=${resetToken}";
+      const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
       const subject = "Réinitialisation du mot de passe";
-      const message =
-        "Cliquez ici pour réinitialiser votre mot de passe : $(resetlink)";
-      await sendEmailConfirmation(email, sibject, message);
+      const message = `Cliquez ici pour réinitialiser votre mot de passe : ${resetLink}`;
+      await sendEmailConfirmation(email, subject, message);
 
       res.json({
         success: true,
         message: "Un email de réinitialisation a été envoyé",
       });
     } catch (err) {
-      console.error(
-        "Erreur lors de la réinitialisation du mot de passe :",
-        err
-      );
       res
         .status(500)
         .json({
@@ -262,5 +224,5 @@ app.post(
 );
 
 app.listen(port, () => {
-  console.log(`Serveur en écoute sur http://localhost:${port}`);
+  console.log(`Serveur démarré sur le port ${port}`);
 });
