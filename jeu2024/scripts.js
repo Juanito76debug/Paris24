@@ -213,10 +213,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const logoutButton = document.getElementById("logoutButton");
-
   if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
+    logoutButton.addEventListener("click", function () {
       localStorage.removeItem("token");
       localStorage.removeItem("userType");
       window.location.href = "index.html";

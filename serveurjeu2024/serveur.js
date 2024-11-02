@@ -18,13 +18,9 @@ app.use(cors());
 app.use(express.static(path.join("C:/Users/juan_/Documents/Paris24/jeu2024")));
 
 mongoose
-  .connect("mongodb://localhost:27017/jeu2024", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect("mongodb://localhost:27017/jeu2024")
   .then(() => console.log("Connexion à MongoDB réussie"))
   .catch((err) => console.error("Erreur de connexion à MongoDB:", err));
-
 const postSchema = new mongoose.Schema({
   content: String,
   date: { type: Date, default: Date.now },
@@ -80,11 +76,9 @@ app.get("/api/online", async (req, res) => {
     const users = await User.countDocuments({ online: true });
     res.json(users);
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: "Erreur lors de la récupération des utilisateurs connectés",
-      });
+    res.status(500).json({
+      error: "Erreur lors de la récupération des utilisateurs connectés",
+    });
   }
 });
 
@@ -178,6 +172,22 @@ app.post(
     }
   }
 );
+app.post("/api/logout", async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(401).json({ error: "Utilisateur non connecté" });
+    }
+    user.online = false;
+    await user.save();
+    res.json({ success: true, message: "Déconnexion réussie" });
+  } catch (err) {
+    console.error("Erreur lors de la déconnexion :", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Erreur lors de la déconnexion" });
+  }
+});
 
 app.post(
   "/api/forgot-password",
@@ -213,12 +223,10 @@ app.post(
         message: "Un email de réinitialisation a été envoyé",
       });
     } catch (err) {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Erreur lors de la réinitialisation du mot de passe",
-        });
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la réinitialisation du mot de passe",
+      });
     }
   }
 );
