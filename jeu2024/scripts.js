@@ -129,7 +129,7 @@ if (loginForm) {
       .then((data) => {
         if (data.success) {
           alert("Connexion réussie!");
-          window.location.href = "profile.html";
+          window.location.href = "profil.html";
         } else {
           errorMessagesLogin.style.display = "block";
           errorMessagesLogin.innerHTML = (data.errors || [])
@@ -239,7 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("contact").innerText = contact;
     document.getElementById("bio").innerText = bio;
     document.getElementById("preferences").innerText = preferences;
-    
   }
 
   // chargement du profil de l'administrateur
