@@ -220,6 +220,63 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = "index.html";
     });
   }
+  // profil de l'administrateur
+  function loadAdminProfile() {
+    const username = localStorage.getItem("username");
+    const fullname = localStorage.getItem("FullName");
+    const age = localStorage.getItem("age");
+    const gender = localStorage.getItem("gender");
+    const email = localStorage.getItem("email");
+    const contact = localStorage.getItem("contact");
+    const bio = localStorage.getItem("bio");
+    const preferences = localStorage.getItem("preferences");
+
+    document.getElementById("username").innerText = username;
+    document.getElementById("fullname").innerText = fullname;
+    document.getElementById("age").innerText = age;
+    document.getElementById("gender").innerText = gender;
+    document.getElementById("adminEmail").innerText = email;
+    document.getElementById("contact").innerText = contact;
+    document.getElementById("bio").innerText = bio;
+    document.getElementById("preferences").innerText = preferences;
+    
+  }
+
+  // chargement du profil de l'administrateur
+  function loadUsers() {
+    fetch("http://localhost:3000/api/users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const usersTableBody = document.getElementById("usersTableBody");
+        usersTableBody.innerHTML = ""; // Vide la table avant le chargement des données
+        data.users.forEach((user) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+          <td>${user.FullName}</td>
+          <td>${user.email}</td></td>
+          <td>
+          <button class="btn btn-sm btn-warning">modifier</button>
+          <button class="btn btn-sm btn-danger">supprimer</button>
+          </td>`;
+
+          usersTableBody.appendChild(row);
+        });
+      })
+      .catch((error) =>
+        console.error("Erreur lors du chargement de l'administrateur :", error)
+      );
+  }
 
   checkUserType();
 });
