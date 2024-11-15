@@ -21,6 +21,7 @@ mongoose
   .connect("mongodb://localhost:27017/jeu2024")
   .then(() => console.log("Connexion à MongoDB réussie"))
   .catch((err) => console.error("Erreur de connexion à MongoDB:", err));
+
 const postSchema = new mongoose.Schema({
   content: String,
   date: { type: Date, default: Date.now },
@@ -99,6 +100,7 @@ app.get("/api/register", (req, res) => {
 app.get("/api/about", (req, res) => {
   res.sendFile(path.join(__dirname, "about.html"));
 });
+
 app.get("/api/profil", async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -117,12 +119,36 @@ app.get("/api/profil", async (req, res) => {
     });
   } catch (err) {
     console.error("Erreur lors de la récupération du profil : ", err);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Erreur lors de la récupération du profil",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération du profil",
+    });
+  }
+});
+
+// route pour récupérer les infos du profil d'un ami
+app.get("/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    res.json({
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      age: user.age,
+      gender: user.gender,
+      contact: user.contact,
+      bio: user.bio,
+      preferences: user.preferences,
+    });
+  } catch (err) {
+    console.error("Erreur lors de la récupération du profil : ", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération du profil",
+    });
   }
 });
 
@@ -204,6 +230,7 @@ app.post(
     }
   }
 );
+
 app.post("/api/logout", async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -262,8 +289,9 @@ app.post(
     }
   }
 );
+
 app.post(
-  "/api/profile",
+  "/api/profil",
   [
     body("fullName").optional().isString(),
     body("age").optional().isInt({ min: 0 }),
@@ -285,24 +313,17 @@ app.post(
       if (!user) {
         return res.status(404).json({ error: "Utilisateur non trouvé" });
       }
-      const { fullName, age, gender, contact, bio, preferences } = req.body;
-      if (fullName) user.fullName = fullName;
-      if (age) user.age = age;
-      if (gender) user.gender = gender;
-      if (contact) user.contact = contact;
-      if (bio) user.bio = bio;
-      if (preferences) user.preferences = preferences;
-      await user.save();
-
-      res.json({ success: true, message: "profil réussie" });
+      res.json({
+        success: true,
+        message: "Profil mis à jour avec succès",
+        user,
+      });
     } catch (err) {
       console.error("Erreur lors de la mise à jour du profil :", err);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Erreur lors de la mise à jour du profil",
-        });
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la mise à jour du profil",
+      });
     }
   }
 );
