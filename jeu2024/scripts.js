@@ -222,7 +222,7 @@ window.onload = function () {
       })
         .then((response) => {
           if (!response.ok) {
-            throw new Error("Failed to fetch profile");
+            throw new Error("Problème pour obtenir un profil");
           }
           return response.json();
         })
@@ -240,9 +240,51 @@ window.onload = function () {
               data.profilePicture;
           }
         })
-        .catch((error) =>
-          console.error("Erreur lors de la récupération du profil :", error)
+        .catch((error) => {
+          console.error("Erreur lors de la récupération du profil :", error);
+          alert("Erreur lors de la récupération du profil : " + error.message);
+        });
+    }
+    // Fonction pour charger les utilisateurs
+    async function loadUsers() {
+      try {
+        const response = await fetch("http://localhost:3000/api/users", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Problème pour obtenir les utilisateurs");
+        }
+
+        const data = await response.json();
+        const usersTableBody = document.getElementById("usersTableBody");
+        if (usersTableBody) {
+          usersTableBody.innerHTML = "";
+          data.forEach((user) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+            <td>${user.username}</td>
+            <td>${user.fullName}</td>
+            <td><button onclick="viewFriendProfile(${user.id})">Voir le profil de l'ami</button></td>
+            <td><button>Modifier</button></td>
+            <td><button>Supprimer</button></td>
+          `;
+            usersTableBody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération des utilisateurs :",
+          error
         );
+        alert(
+          "Erreur lors de la récupération des utilisateurs : " + error.message
+        );
+      }
     }
 
     // Mise à jour du profil de l'administrateur
@@ -263,7 +305,7 @@ window.onload = function () {
         });
         const data = await response.json();
         if (response.ok) {
-          alert("Profil Réussie !");
+          alert("Profil mis à jour avec succès !");
           loadAdminProfile(); // rechargement du profil après mise à jour
         } else {
           alert("Erreur lors de la mise à jour du profil : " + data.message);
@@ -274,17 +316,8 @@ window.onload = function () {
       }
     });
 
-    // Charger le profil lors du chargement de la page
-    loadAdminProfile();
-
-    // Vérifier le type d'utilisateur (facultatif, selon vos besoins)
-    function checkUserType() {
-      // Ajouter votre logique de vérification ici
-    }
-
-    checkUserType();
-    // fonction pour voir le profil d'un ami de l'administrateur
-    window.vienwFriendProfile = async function (userId) {
+    // Fonction pour voir le profil d'un ami de l'administrateur
+    window.viewFriendProfile = async function (userId) {
       try {
         const response = await fetch(
           `http://localhost:3000/api/users/${userId}`,
@@ -298,8 +331,9 @@ window.onload = function () {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch user profile");
+          throw new Error("Problème pour obtenir le profil de l'ami");
         }
+
         const data = await response.json();
         document.getElementById("friendProfileSection").style.display = "block";
         document.getElementById("friendUsername").innerText = data.username;
@@ -314,13 +348,87 @@ window.onload = function () {
         if (data.profilePicture) {
           document.querySelector("img[alt='Photo de profil']").src =
             data.profilePicture;
-        } else {
-          document.querySelector("img[alt='Photo de profil']").src =
-            "https://via.placeholder.com/150x150";
         }
+      } catch (error) {
+        console.error("Erreur pour récupérer le profil de l'ami : ", error);
+        alert("Erreur pour récupérer le profil de l'ami : " + error.message);
+      }
+    };
+    // Fonction pour modifier le profil de l'ami de l'administrateur
+    window.editFriendProfile = async function (userId) {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/users/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Problème pour obtenir le profil de l'ami");
+        }
+        const data = await response.json();
+        document.getElementById("FriendProfileSection").style.display = "block";
+        document.getElementById("FriendUsername").value = data.username;
+        document.getElementById("FriendFullName").value = data.fullName;
+        document.getElementById("FriendAge").value = data.age;
+        document.getElementById("FriendGender").value = data.gender;
+        document.getElementById("FriendEmail").value = data.email;
+        document.getElementById("FriendPhone").value = data.contact;
+        document.getElementById("FriendBio").value = data.bio;
+        document.getElementById("FriendPreferences").value = data.preferences;
+        document.getElementById("friendProfileForm").onsubmit = async function (
+          event
+        ) {
+          event.preventDefault();
+          const formData = new FormData(
+            document.getElementById("friendProfileForm")
+          );
+          const payload = Object.fromEntries(formData.entries());
+          try {
+            const response = await fetch(
+              `http://localhost:3000/api/users/${userId}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(payload),
+              }
+            );
+            const updateData = await updateResponse.json();
+            if (updateResponse.ok) {
+              alert("Profil de l'ami réussie!");
+              loadUsers();
+            } else {
+              alert(
+                "Erreur lors de la mise à jour du profil de l'ami : " +
+                  updateData.message
+              );
+            }
+          } catch (error) {
+            console.error(
+              "Erreur lors de la mise à jour du profil de l'ami : ",
+              error
+            );
+            alert(
+              "Erreur lors de la mise à jour du profil de l'ami : " +
+                error.message
+            );
+          }
+        };
       } catch (error) {
         console.error("Erreur pour récupérer le profil de l'ami : ", error);
       }
     };
+    // Charger le profil lors du chargement de la page
+    loadAdminProfile();
+
+    // Vérifier le type d'utilisateur (facultatif, selon vos besoins)
+    checkUserType();
   });
 };

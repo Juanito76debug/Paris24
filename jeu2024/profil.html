@@ -67,94 +67,133 @@
             </div>
           </div>
         </div>
-        <div class="col-md-8">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <form id="adminProfileForm">
+              <div class="mb-3">
+                <label for="adminUsername" class="form-label">Pseudonyme</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="adminUsername"
+                  name="Username"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="adminFullName" class="form-label"
+                  >Nom et prénom</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="adminFullName"
+                  name="FullName"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="adminAge" class="form-label">Âge</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="adminAge"
+                  name="Age"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="adminGender" class="form-label">Genre</label>
+                <select class="form-select" id="adminGender" name="Gender">
+                  <option value="male">Masculin</option>
+                  <option value="female">Féminin</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="adminEmail" class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="adminEmail"
+                  name="Email"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="adminPhone" class="form-label">Téléphone</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="adminPhone"
+                  name="Phone"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="adminBio" class="form-label">Présentation</label>
+                <textarea
+                  class="form-control"
+                  id="adminBio"
+                  name="Bio"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="adminPreferences" class="form-label"
+                  >Préférences</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="adminPreferences"
+                  name="Preferences"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Modifier les informations
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--Affichage de tous les profils de l'administrateurs-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-12">
           <div class="card">
-            <div class="card-body">
-              <form id="adminProfileForm">
-                <div class="mb-3">
-                  <label for="adminUsername" class="form-label"
-                    >Pseudonyme</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="adminUsername"
-                    name="Username"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="adminFullName" class="form-label"
-                    >Nom et prénom</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="adminFullName"
-                    name="FullName"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="adminAge" class="form-label">Âge</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="adminAge"
-                    name="Age"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="adminGender" class="form-label">Genre</label>
-                  <select class="form-select" id="adminGender" name="Gender">
-                    <option value="male">Masculin</option>
-                    <option value="female">Féminin</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label for="adminEmail" class="form-label">Email</label>
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="adminEmail"
-                    name="Email"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="adminPhone" class="form-label">Téléphone</label>
-                  <input
-                    type="tel"
-                    class="form-control"
-                    id="adminPhone"
-                    name="Phone"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="adminBio" class="form-label">Présentation</label>
-                  <textarea
-                    class="form-control"
-                    id="adminBio"
-                    name="Bio"
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div class="mb-3">
-                  <label for="adminPreferences" class="form-label"
-                    >Préférences</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="adminPreferences"
-                    name="Preferences"
-                  />
-                </div>
-                <button type="submit" class="btn btn-primary">
-                  Modifier les informations
-                </button>
-              </form>
+            <div class="card-body text-center">
+              <div class="card-header">
+                <h2>Tous les Profils</h2>
+                <form id="usersProfileForm">
+                  <div class="mb-3">
+                    <label for="friendUsername" class="form-label"
+                      >Pseudonyme</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="friendUsername"
+                      name="username"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendFullName" class="form-label"
+                      >Nom et Prénom</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="friendFullName"
+                      name="fullName"
+                    />
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    Modifier les informations
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <!--Affichage du profil de l'ami de l'administrateur-->
       <div class="container mt-5">
         <div class="row">
@@ -174,28 +213,92 @@
           <div class="col-md-8">
             <div class="card">
               <div class="card-body">
-                <h5>Profil de l'Ami</h5>
-                <p>
-                  <strong>Pseudonyme :</strong>
-                  <span id="friendUsername"></span>
-                </p>
-                <p>
-                  <strong>Nom et Prénom :</strong>
-                  <span id="friendFullName"></span>
-                </p>
-                <p><strong>Age :</strong> <span id="friendAge"></span></p>
-                <p><strong>Genre :</strong> <span id="friendGender"></span></p>
-                <p><strong>Email :</strong> <span id="friendEmail"></span></p>
-                <p>
-                  <strong>Téléphone :</strong> <span id="friendPhone"></span>
-                </p>
-                <p>
-                  <strong>Présentation :</strong> <span id="friendBio"></span>
-                </p>
-                <p>
-                  <strong>Préférences :</strong>
-                  <span id="friendPreferences"></span>
-                </p>
+                <h5>Modification du profil de l'Ami</h5>
+                <form id="friendProfileForm">
+                  <div class="mb-3">
+                    <label for="friendUsername" class="form-label"
+                      >Pseudonyme</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="friendUsername"
+                      name="username"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendFullName" class="form-label"
+                      >Nom et Prénom</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="friendFullName"
+                      name="fullName"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendAge" class="form-label">Age</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="friendAge"
+                      name="age"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendGender" class="form-label">Genre</label>
+                    <select class="form-select" id="friendGender" name="gender">
+                      <option value="male">Masculin</option>
+                      <option value="female">Féminin</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendEmail" class="form-label">Email</label>
+                    <input
+                      type="email"
+                      class="form-control"
+                      id="friendEmail"
+                      name="email"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendPhone" class="form-label"
+                      >Téléphone</label
+                    >
+                    <input
+                      type="tel"
+                      class="form-control"
+                      id="friendPhone"
+                      name="phone"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendBio" class="form-label"
+                      >Présentation</label
+                    >
+                    <textarea
+                      class="form-control"
+                      id="friendBio"
+                      name="bio"
+                      rows="3"
+                    ></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="friendPreferences" class="form-label"
+                      >Préférences</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="friendPreferences"
+                      name="preferences"
+                    />
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    Modifier les informations
+                  </button>
+                </form>
               </div>
             </div>
           </div>

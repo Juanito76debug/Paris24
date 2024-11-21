@@ -151,7 +151,40 @@ app.get("/api/users/:id", async (req, res) => {
     });
   }
 });
+// Route pour mettre à jour le profil de l'ami de l'administrateurs
+app.put("/api/users/:id", [
+  body("username").optional().isString(),
+  body("fullName").optional().isString(),
+  body("age").optional().isInt({ min: 0 }),
+  body("gender").optional().isIn(["male", "female"]),
+  body("contact").optional().isString(),
+  body("bio").optional().isString(),
+  body("preferences").optional().isString(),
 
+],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+      if (!user) {
+        return res.status(404).json({ error: "Utilisateur non trouvé" });
+      }
+      res.json({ success: true, message: "Profil mis à jour" });
+    } catch (err){
+      console.error("Erreur lors de la mise à jour du profil :", err);
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la mise à jour du profil",
+      });
+    }
+    });
+    
 app.post(
   "/api/register",
   [
@@ -191,6 +224,19 @@ app.post(
     }
   }
 );
+
+//Route pour récupérer tous les profils de l'administrateurs
+app.get("/api/users", async (req, res) => {
+  try {
+    const profiles = await User.find({ admin: true });
+    res.json(profiles);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des profils",
+    });
+  }
+});
 
 app.post(
   "/api/login",
@@ -293,9 +339,11 @@ app.post(
 app.post(
   "/api/profil",
   [
+    body("username").optional().isString(),
     body("fullName").optional().isString(),
     body("age").optional().isInt({ min: 0 }),
-    body("gender").optional().isIn(["male", "female", "other"]),
+    body("gender").optional().isIn(["male", "female"]),
+    body("email").optional().isString(),
     body("contact").optional().isString(),
     body("bio").optional().isString(),
     body("preferences").optional().isString(),
@@ -315,7 +363,7 @@ app.post(
       }
       res.json({
         success: true,
-        message: "Profil mis à jour avec succès",
+        message: "Profil réussie",
         user,
       });
     } catch (err) {
