@@ -152,16 +152,17 @@ app.get("/api/users/:id", async (req, res) => {
   }
 });
 // Route pour mettre à jour le profil de l'ami de l'administrateurs
-app.put("/api/users/:id", [
-  body("username").optional().isString(),
-  body("fullName").optional().isString(),
-  body("age").optional().isInt({ min: 0 }),
-  body("gender").optional().isIn(["male", "female"]),
-  body("contact").optional().isString(),
-  body("bio").optional().isString(),
-  body("preferences").optional().isString(),
-
-],
+app.put(
+  "/api/users/:id",
+  [
+    body("username").optional().isString(),
+    body("fullName").optional().isString(),
+    body("age").optional().isInt({ min: 0 }),
+    body("gender").optional().isIn(["male", "female"]),
+    body("contact").optional().isString(),
+    body("bio").optional().isString(),
+    body("preferences").optional().isString(),
+  ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -176,15 +177,16 @@ app.put("/api/users/:id", [
         return res.status(404).json({ error: "Utilisateur non trouvé" });
       }
       res.json({ success: true, message: "Profil mis à jour" });
-    } catch (err){
+    } catch (err) {
       console.error("Erreur lors de la mise à jour du profil :", err);
       res.status(500).json({
         success: false,
         message: "Erreur lors de la mise à jour du profil",
       });
     }
-    });
-    
+  }
+);
+
 app.post(
   "/api/register",
   [

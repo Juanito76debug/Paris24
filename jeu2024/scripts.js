@@ -425,7 +425,45 @@ window.onload = function () {
         console.error("Erreur pour récupérer le profil de l'ami : ", error);
       }
     };
-    // Charger le profil lors du chargement de la page
+
+    // Fonction pour supprimer le profil de l'administrateur
+    document.addEventListener("DOMContentLoaded", () => {
+      window.showDeleteProfileSection = function () {
+        document.getElementById("deleteProfileSection").style.display =
+          "block";
+      };
+      window.hideDeleteProfileSection = function () {
+        document.getElementById("deleteProfileSection").style.display =
+          "none";
+      };
+      
+      document.getElementById("confirmDeleteProfile").addEventListener("click", async function () {
+        try {
+          const response = await fetch(
+            "http://localhost:3000/api/profil",
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            });
+          const data = await response.json();
+          if (response.ok) {
+            alert("Profil supprimé avec succès!");
+            localStorage.removeItem("token");
+            window.location.href = "/register.html";
+          } else {
+            alert("Erreur lors de la suppression du profil : " + data.message);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la suppression du profil : ", error);
+          alert("Erreur lors de la suppression du profil : " + error.message);
+        }
+        
+      });
+    });
+        // Charger le profil lors du chargement de la page
     loadAdminProfile();
 
     // Vérifier le type d'utilisateur (facultatif, selon vos besoins)
