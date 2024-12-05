@@ -211,7 +211,6 @@ window.onload = function () {
 
   // Fonction pour charger le profil de l'administrateur
   document.addEventListener("DOMContentLoaded", () => {
-    // Fonction pour charger le profil de l'administrateur
     function loadAdminProfile() {
       fetch("http://localhost:3000/api/profil", {
         method: "GET",
@@ -227,7 +226,7 @@ window.onload = function () {
           return response.json();
         })
         .then((data) => {
-          document.getElementById("adminUsername").value = data.username;
+          document.getElementById("adminUsername").textContent = data.username;
           document.getElementById("adminFullName").value = data.fullName;
           document.getElementById("adminAge").value = data.age;
           document.getElementById("adminGender").value = data.gender;
@@ -245,6 +244,39 @@ window.onload = function () {
           alert("Erreur lors de la récupération du profil : " + error.message);
         });
     }
+
+    // Gestionnaire d'evenement pour modifier le profil de l'administrateur
+    document
+      .getElementById("AdminProfileForm")
+      .addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const payload = Object.fromEntries(formData.entries());
+        payload.Age = 48; //modification de l'age
+        payload.Phone = "0123456789"; //modification du téléphone
+        payload.preferences = "adore le foot"; // modification de la préférence
+        try {
+          const response = await fetch("http://localhost:3000/api/profil", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            alert("Profil mis à jour réussie");
+            loadAdminProfile();
+          } else {
+            alert("Erreur lors de la mise à jour du profil : " + data.message);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour du profil :", error);
+          alert("Erreur lors de la mise à jour du profil : " + error.message);
+        }
+      });
+
     // Fonction pour charger les utilisateurs
     async function loadUsers() {
       try {
@@ -287,16 +319,16 @@ window.onload = function () {
       }
     }
 
-    // Mise à jour du profil de l'administrateur
-    const adminProfileForm = document.getElementById("adminProfileForm");
+    // Mise à jour du profil de l'administrateur en modale
+    const editProfileForm = document.getElementById("editProfileForm");
 
-    adminProfileForm.addEventListener("submit", async function (event) {
+    editProfileForm.addEventListener("submit", async function (event) {
       event.preventDefault();
-      const formData = new FormData(adminProfileForm);
+      const formData = new FormData(editProfileForm);
       const payload = Object.fromEntries(formData.entries());
       try {
         const response = await fetch("http://localhost:3000/api/profil", {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -306,7 +338,17 @@ window.onload = function () {
         const data = await response.json();
         if (response.ok) {
           alert("Profil mis à jour avec succès !");
-          loadAdminProfile(); // rechargement du profil après mise à jour
+          // Mise à jour des informations modifiées sur la page
+          document.getElementById("adminAge").value = payload.age;
+          document.getElementbyId("adminPhone").value = payload.phone;
+          document.getElementById("adminPreferences").value =
+            payload.preferences;
+          //fermeture de la modale
+          const editProfileModal = new bootstrap.Modal(
+            document.getElementById("editProfileModal")
+          );
+          editProfileModal.hide();
+          // rechargement du profil après mise à jour
         } else {
           alert("Erreur lors de la mise à jour du profil : " + data.message);
         }
@@ -354,6 +396,7 @@ window.onload = function () {
         alert("Erreur pour récupérer le profil de l'ami : " + error.message);
       }
     };
+
     // Fonction pour modifier le profil de l'ami de l'administrateur
     window.editFriendProfile = async function (userId) {
       try {
@@ -392,7 +435,7 @@ window.onload = function () {
             const response = await fetch(
               `http://localhost:3000/api/users/${userId}`,
               {
-                method: "PUT",
+                method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -400,8 +443,8 @@ window.onload = function () {
                 body: JSON.stringify(payload),
               }
             );
-            const updateData = await updateResponse.json();
-            if (updateResponse.ok) {
+            const updateData = await response.json();
+            if (response.ok) {
               alert("Profil de l'ami réussie!");
               loadUsers();
             } else {
@@ -413,6 +456,7 @@ window.onload = function () {
           } catch (error) {
             console.error(
               "Erreur lors de la mise à jour du profil de l'ami : ",
+
               error
             );
             alert(
@@ -426,28 +470,18 @@ window.onload = function () {
       }
     };
 
-    // Fonction pour supprimer le profil de l'administrateur
-    document.addEventListener("DOMContentLoaded", () => {
-      window.showDeleteProfileSection = function () {
-        document.getElementById("deleteProfileSection").style.display =
-          "block";
-      };
-      window.hideDeleteProfileSection = function () {
-        document.getElementById("deleteProfileSection").style.display =
-          "none";
-      };
-      
-      document.getElementById("confirmDeleteProfile").addEventListener("click", async function () {
+    // Gestionnaire d'événements pour le bouton de confirmation de suppression
+    document
+      .getElementById("confirmDeleteProfile")
+      .addEventListener("click", async function () {
         try {
-          const response = await fetch(
-            "http://localhost:3000/api/profil",
-            {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            });
+          const response = await fetch("http://localhost:3000/api/profil", {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
           const data = await response.json();
           if (response.ok) {
             alert("Profil supprimé avec succès!");
@@ -460,10 +494,16 @@ window.onload = function () {
           console.error("Erreur lors de la suppression du profil : ", error);
           alert("Erreur lors de la suppression du profil : " + error.message);
         }
-        
       });
-    });
-        // Charger le profil lors du chargement de la page
+
+    // Gestionnaire d'événements pour le bouton d'annulation de suppression
+    document
+      .querySelector("#deleteProfileSection .btn-secondary")
+      .addEventListener("click", function () {
+        hideDeleteProfileSection();
+      });
+
+    // Charger le profil lors du chargement de la page
     loadAdminProfile();
 
     // Vérifier le type d'utilisateur (facultatif, selon vos besoins)
