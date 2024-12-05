@@ -130,7 +130,7 @@
                     name="Bio"
                     rows="3"
                   >
-                  Passionné par les jeux Olympiques</textarea
+                  Passionné par les jeux olympiques</textarea
                   >
                 </div>
                 <div class="mb-3">
@@ -293,7 +293,7 @@
             <div class="card-body text-center">
               <img
                 src="assets/Rafa.png"
-                alt="Photo de profil de Jane"
+                alt="Photo de profil de Rafael"
                 class="rounded-circle img-fluid"
                 style="width: 150px"
               />
@@ -463,6 +463,295 @@
                   Supprimer tous les profils
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--identité du profil du membres-->
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body text-center">
+                <img
+                  src="assets/Elena.png"
+                  alt="Photo de profil de Elena"
+                  class="rounded-circle img-fluid"
+                  style="width: 150px"
+                />
+                <h4 class="mt-3">Pseudonyme:</h4>
+                <p id="memberUsername">Elena77</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-body">
+                <form id="memberProfileForm">
+                  <div class="mb-3">
+                    <label for="memberFullName" class="form-label"
+                      >Nom et prénom</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="memberFullName"
+                      name="FullName"
+                      value="Martinez Elena"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="memberAge" class="form-label">Âge</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="memberAge"
+                      name="age"
+                      value="47"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="memberGender" class="form-label">Genre</label>
+                    <select class="form-select" id="memberGender" name="gender">
+                      <option value="male">Masculin</option>
+                      <option value="female" selected>Féminin</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="memberEmail" class="form-label">Email</label>
+                    <input
+                      type="email"
+                      class="form-control"
+                      id="adminEmail"
+                      name="Email"
+                      value="ElenaMartinez@gmail.com"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="memberPhone" class="form-label"
+                      >Téléphone</label
+                    >
+                    <input
+                      type="phone"
+                      class="form-control"
+                      id="memberPhone"
+                      name="Phone"
+                      value="0612354255"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="memberbio" class="form-label"
+                      >Présentation</label
+                    >
+                    <textarea
+                      class="form-control"
+                      id="memberbio"
+                      name="Bio"
+                      rows="3"
+                    >
+                  Fan des jeux olympiques 
+                </textarea
+                    >
+                  </div>
+                  <div class="mb-3">
+                    <label for="memberPreferences" class="form-label"
+                      >Préférences</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="memberPreferences"
+                      name="Preferences"
+                      value="Football, basketball"
+                    />
+                  </div>
+                  <!--modification du profil du membre-->
+                  <button type="submit" class="btn btn-primary">
+                    Modification enregistré
+                  </button>
+                </form>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editMemberProfileModal"
+                >
+                  Modifier le profil
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--modal pour la modification du profil du membre-->
+      <div
+        class="modal fade"
+        id="editMemberProfileModal"
+        tabindex="-1"
+        aria-labelledby="editMemberProfileModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editMemberProfileModalLabel">
+                Modifier le Profil
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              êtes vous sur de vouloir modifier le profil du membre?
+              <form id="editmemberProfileForm">
+                <div class="mb-3">
+                  <label for="editmemberAge" class="form-label">Age</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="editmemberAge"
+                    name="editAge"
+                    value="48"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="editmemberPhone" class="form-label"
+                    >Téléphone</label
+                  >
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="editmemberPhone"
+                    name="editPhone"
+                    value="0123456987"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="editmemberPreferences" class="form-label">
+                    Préférences
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="editmemberPreferences"
+                    name="editPreferences"
+                    value="Natation"
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Modification enregistré
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--Affichage du profil de l'ami du membre-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body text-center">
+              <img
+                src="assets/Myriam.png"
+                alt="Photo de profil de Myriam"
+                class="rounded-circle img-fluid"
+                style="width: 150px"
+              />
+              <h4 class="mt-3">Pseudonyme:</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body">
+              <h5>Affichage du profil de l'Ami du membre</h5>
+              <form id="friendMemberProfileForm">
+                <div class="mb-3">
+                  <label for="friendUsername" class="form-label"
+                    >Pseudonyme</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="friendUsername"
+                    name="username"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="friendFullName" class="form-label"
+                    >Nom et Prénom</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="friendFullName"
+                    name="fullName"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="friendAge" class="form-label">Age</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="friendAge"
+                    name="age"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="friendGender" class="form-label">Genre</label>
+                  <select
+                    class="form-select"
+                    id="friendMemberGender"
+                    name="gender"
+                  >
+                    <option value="male">Masculin</option>
+                    <option value="female" selected>Féminin</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="friendEmail" class="form-label">Email</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="friendEmail"
+                    name="email"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="friendPhone" class="form-label">Téléphone</label>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="friendPhone"
+                    name="phone"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="friendBio" class="form-label">Présentation</label>
+                  <textarea
+                    class="form-control"
+                    id="friendBio"
+                    name="bio"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="friendPreferences" class="form-label"
+                    >Préférences</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="friendPreferences"
+                    name="preferences"
+                  />
+                </div>
+              </form>
             </div>
           </div>
         </div>
