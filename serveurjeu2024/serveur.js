@@ -338,14 +338,62 @@ app.post(
   }
 );
 
+// Mise à jour du profil de l'administrateur
+
+app.put("/api/profil", async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "Administrateur non trouvé" });
+    }
+    const { username, fullName, age, gender, contact, bio, preferences } =
+      req.body;
+    console.log("Données reçues :", req.body); // Ajouté pour débogage
+
+    user.username = username || user.username;
+    user.fullName = fullName || user.fullName;
+    user.age = age || user.age;
+    user.gender = gender || user.gender;
+    user.contact = contact || user.contact;
+    user.bio = bio || user.bio;
+    user.preferences = preferences || user.preferences;
+
+    await user.save();
+    res.json({ success: true, message: "Profil mis à jour" });
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour du profil :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la mise à jour du profil",
+    });
+  }
+});
+
+// Suppression du profil de l'administrateur
+app.delete("/api/profil", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "Administrateur non trouvé" });
+    }
+    res.json({ success: true, message: "Profil supprimé" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du profil :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression du profil",
+    });
+  }
+});
+
+// Mise à jour du profil de l'ami de l'administrateur
 app.post(
-  "/api/profil",
+  "/api/users/:id",
   [
     body("username").optional().isString(),
     body("fullName").optional().isString(),
     body("age").optional().isInt({ min: 0 }),
     body("gender").optional().isIn(["male", "female"]),
-    body("email").optional().isString(),
     body("contact").optional().isString(),
     body("bio").optional().isString(),
     body("preferences").optional().isString(),
@@ -356,18 +404,14 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
     try {
-      const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+      const user = await User.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true,
       });
       if (!user) {
-        return res.status(404).json({ error: "Utilisateur non trouvé" });
+        return res.status(404).json({ error: "administrateur non trouvé" });
       }
-      res.json({
-        success: true,
-        message: "Profil réussie",
-        user,
-      });
+      res.json({ success: true, message: "Profil mis à jour" });
     } catch (err) {
       console.error("Erreur lors de la mise à jour du profil :", err);
       res.status(500).json({
