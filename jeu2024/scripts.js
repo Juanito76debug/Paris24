@@ -598,7 +598,7 @@ document.addEventListener("DomContentLoaded", function () {
       const data = await response.json();
       if (response.ok) {
         alert("Message publié avec succès!");
-        friendposthMessageForm.reset();
+        friendpostMessageForm.reset();
         loadFriendMessages();
       } else {
         alert("Erreur lors de la publication du message : " + data.message);
@@ -636,4 +636,77 @@ document.addEventListener("DomContentLoaded", function () {
     }
   }
   loadFriendMessages();
+});
+
+// Formulaire pour publier un message sur tous les profils de l'administrateur.
+
+document.addEventListener("DOMContentLoaded", function () {
+  const postAllProfilesForm = document.getElementById("postAllProfilesForm");
+  const allProfilesMessagesList = document.getElementById(
+    "allProfilesMessagesList"
+  );
+
+  postAllProfilesForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const formData = new FormData(postAllProfilesForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/postAllProfiles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        alert("Message publié avec succès sur tous les profils !");
+        postAllProfilesForm.reset();
+        loadAllProfilesMessages();
+      } else {
+        alert("Erreur lors de la publication du message : " + data.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la publication du message : ", error);
+      alert("Erreur lors de la publication du message : " + error.message);
+    }
+  });
+
+  // Charger les messages lors du chargement de la page
+  async function loadAllProfilesMessages() {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/allProfilesMessages",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Problème pour obtenir les messages");
+      }
+      const data = await response.json();
+      allProfilesMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      data.messages.forEach((message) => {
+        const li = document.createElement("li");
+        li.classList.add("list-group-item");
+        li.textContent = message.content;
+        allProfilesMessagesList.appendChild(li);
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des messages : ", error);
+      alert("Erreur lors de la récupération des messages : " + error.message);
+    }
+  }
+
+  // Charger les messages lors du chargement de la page
+  loadAllProfilesMessages();
 });

@@ -475,11 +475,49 @@ app.post("/api/friendMessages/:friendId", async (req, res) => {
   }
 });
 
+// Route pour que l'administrateur puisse publier un message sur tous les profils
+
+app.post("/api/postAllProfiles", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const users = await User.find();
+
+    const messages = users.map((user) => ({
+      content,
+      sender: req.user.id,
+      recipient: user._id,
+    }));
+    await FriendMessage.insertMany(messages);
+    res.json({ success: true, message: "Message publié sur tous les profils" });
+  } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la publication du message",
+    });
+  }
+});
+
 // Route pour récupérer tous les messages publiés
 
 app.get("/api/messages", async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
+    res.json({ success: true, messages });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des messages :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des messages",
+    });
+  }
+});
+
+// Route pour récupérer tous les messages publiés sur tous les profils
+
+app.get("/api/allProfilesMessages", async (req, res) => {
+  try {
+    const messages = await FriendMessage.find().sort({ date: -1 });
     res.json({ success: true, messages });
   } catch (err) {
     console.error("Erreur lors de la récupération des messages :", err);

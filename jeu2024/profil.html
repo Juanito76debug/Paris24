@@ -545,6 +545,46 @@
           </div>
         </div>
       </div>
+
+      <!--publication d'un message sur tous les profils de l'administrateurs-->
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <div class="card">
+              <div class="card-body">
+                <h5>Publication de message sur tous les profils</h5>
+                <form id="postAllProfilesForm">
+                  <div class="mb-3">
+                    <textarea
+                      class="form-control"
+                      id="postAllprofilesMessage"
+                      name="message"
+                      rows="3"
+                    ></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Publier</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--Affichage des messages publiés sur tous les profils de l'administrateur-->
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">
+                  Messages publiés sur tous les profils
+                </h5>
+                <div id="allProfilesMessagesList" class="list-group"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!--identité du profil du membres-->
       <div class="container mt-5">
         <div class="row">
