@@ -340,7 +340,7 @@ window.onload = function () {
           alert("Profil mis à jour avec succès !");
           // Mise à jour des informations modifiées sur la page
           document.getElementById("adminAge").value = payload.age;
-          document.getElementbyId("adminPhone").value = payload.phone;
+          document.getElementById("adminPhone").value = payload.phone;
           document.getElementById("adminPreferences").value =
             payload.preferences;
           //fermeture de la modale
@@ -510,3 +510,130 @@ window.onload = function () {
     checkUserType();
   });
 };
+
+// formulaire pour publier un message sur le profil de l'administrateur
+document.addEventListener("DomContentLoaded", function () {
+  const posthMessageForm = document.getElementById("postshMessageForm");
+  const messagesList = document.getElementById("messagesList");
+
+  publishMessageForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const formData = new FormData(publishMessageForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("http://localhost:3000/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Message publié avec succès!");
+        posthMessageForm.reset();
+        loadMessages();
+      } else {
+        alert("Erreur lors de la publication du message : " + data.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la publication du message : ", error);
+      alert("Erreur lors de la publication du message : " + error.message);
+    }
+  });
+
+  // Charger les messages lors du chargement de la page
+  async function loadMessages() {
+    try {
+      const response = await fetch("http://localhost:3000/api/messages", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Problème pour obtenir les messages");
+      }
+      const data = await response.json();
+      messagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      data.forEach((message) => {
+        const li = document.createElement("li");
+        li.textContent = message.message;
+        messagesList.appendChild(li);
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des messages : ", error);
+      alert("Erreur lors de la récupération des messages : " + error.message);
+    }
+  }
+
+  loadMessages();
+});
+
+// formulaire pour publier un message sur le profil de l'ami de l'administrateur
+
+document.addEventListener("DomContentLoaded", function () {
+  const friendpostMessageForm = document.getElementById(
+    "friendPostMessageForm"
+  );
+  const friendMessagesList = document.getElementById("friendmessagesList");
+
+  friendpostMessageForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const formData = new FormData(friendpostMessageForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("http://localhost:3000/api/friendMessages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Message publié avec succès!");
+        friendposthMessageForm.reset();
+        loadFriendMessages();
+      } else {
+        alert("Erreur lors de la publication du message : " + data.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la publication du message : ", error);
+      alert("Erreur lors de la publication du message : " + error.message);
+    }
+  });
+
+  // Charger les messages lors du chargement de la page
+
+  async function loadFriendMessages() {
+    try {
+      const response = await fetch("http://localhost:3000/api/friendMessages", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Problème pour obtenir les messages");
+      }
+      const data = await response.json();
+      friendMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      data.forEach((message) => {
+        const li = document.createElement("li");
+        li.textContent = message.message;
+        friendMessagesList.appendChild(li);
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des messages : ", error);
+      alert("Erreur lors de la récupération des messages : " + error.message);
+    }
+  }
+  loadFriendMessages();
+});

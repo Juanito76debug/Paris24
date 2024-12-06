@@ -38,10 +38,22 @@ const userSchema = new mongoose.Schema({
   bio: String,
   preferences: String,
   online: { type: Boolean, default: false },
+  friendMessages: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "FriendMessage" },
+  ],
+});
+
+const friendMessageSchema = new mongoose.Schema({
+  content: String,
+  date: { type: Date, default: Date.now },
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
 const Post = mongoose.model("Post", postSchema);
 const User = mongoose.model("User", userSchema);
+
+const FriendMessage = mongoose.model("FriendMessage", friendMessageSchema);
 
 const sendEmailConfirmation = async (email, subject, message) => {
   try {
@@ -421,6 +433,62 @@ app.post(
     }
   }
 );
+
+// Route pour que l'administrateur puuisse publier un message
+
+app.post("/api/messages", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const message = new Message({ content });
+    await message.save();
+    res.json({ success: true, content: message.content });
+  } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la publication du message",
+    });
+  }
+});
+
+// Route pour que l'administrateur puisse publier un message dans le profil de son ami
+app.post("/api/friendMessages/:friendId", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const friend = await User.findById(req.params.friendId);
+    if (!friend) {
+      return res.status(404).json({ error: "Ami non trouvé" });
+    }
+    const message = new FriendMessage({
+      content,
+      sender: req.user.id,
+      recipient: friend._id,
+    });
+    await message.save();
+    res.json({ success: true, content: message.content });
+  } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la publication du message",
+    });
+  }
+});
+
+// Route pour récupérer tous les messages publiés
+
+app.get("/api/messages", async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: -1 });
+    res.json({ success: true, messages });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des messages :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des messages",
+    });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Serveur démarré sur le port ${port}`);

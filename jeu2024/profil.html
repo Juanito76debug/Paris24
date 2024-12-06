@@ -162,8 +162,7 @@
               <!--suppression du profil de l'administrateur-->
               <button
                 type="button"
-                class="btn btn-danger"
-                id="deleteProfile"
+                class="btn btn-danger mt-2"
                 data-bs-toggle="modal"
                 data-bs-target="#deleteProfileModal"
               >
@@ -262,8 +261,8 @@
             ></button>
           </div>
           <div class="modal-body">
-            Êtes-vous sûr de vouloir supprimer votre profil administrateur?
-            Cette action est irréversible.
+            Souhaitez-vous supprimer votre profil administrateur? Cette action
+            est indéfinie.
           </div>
           <div class="modal-footer">
             <button
@@ -280,6 +279,44 @@
             >
               Supprimer
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--L'administrateur publie un message sur son profil-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5>Publication de message</h5>
+              <form id="postMessageForm">
+                <div class="mb-3">
+                  <textarea
+                    class="form-control"
+                    id="postMessage"
+                    name="message"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Publier</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Affichage des messages publiés sur le profil de l'administrateur-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Messages publiés</h5>
+              <div id="messagesList" class="list-group"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -403,6 +440,47 @@
               >
                 Supprimer le Profil de l'Ami
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--publication d'un message sur le profil de l'ami de l'administrateur-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5>Publication du message chez le profil de l'ami</h5>
+              <form id="friendPostMessageForm">
+                <div class="mb-3">
+                  <textarea
+                    class="form-control"
+                    id="friendPostMessage"
+                    name="message"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Publier</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Affichage des messages publiés sur le profil de l'ami de l'administrateur-->
+
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                Messages publiés sur le profil de l'ami
+              </h5>
+              <div id="friendMessagesList" class="list-group"></div>
             </div>
           </div>
         </div>
