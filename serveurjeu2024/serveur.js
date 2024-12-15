@@ -38,22 +38,18 @@ const userSchema = new mongoose.Schema({
   bio: String,
   preferences: String,
   online: { type: Boolean, default: false },
-  friendMessages: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "FriendMessage" },
-  ],
 });
 
-const friendMessageSchema = new mongoose.Schema({
-  content: String,
-  date: { type: Date, default: Date.now },
-  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+const messageSchema = new mongoose.Schema({
+  content: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
 const Post = mongoose.model("Post", postSchema);
 const User = mongoose.model("User", userSchema);
-
-const FriendMessage = mongoose.model("FriendMessage", friendMessageSchema);
+const Message = mongoose.model("Message", messageSchema);
 
 const sendEmailConfirmation = async (email, subject, message) => {
   try {
@@ -79,6 +75,22 @@ const sendEmailConfirmation = async (email, subject, message) => {
   }
 };
 
+// Middleware pour l'authentification
+const authenticateToken = async (req, res, next) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+
+  if (!token) return res.status(401).json({ error: "Token non fourni" });
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: "Token invalide" });
+  }
+};
+
+// Route pour récupérer le nombre de messages
 app.get("/api/messageCount", async (req, res) => {
   try {
     const count = await Post.countDocuments();
@@ -90,6 +102,7 @@ app.get("/api/messageCount", async (req, res) => {
   }
 });
 
+// Route pour récupérer le nombre d'utilisateurs en ligne
 app.get("/api/online", async (req, res) => {
   try {
     const users = await User.countDocuments({ online: true });
@@ -113,21 +126,25 @@ app.get("/api/about", (req, res) => {
   res.sendFile(path.join(__dirname, "about.html"));
 });
 
-app.get("/api/profil", async (req, res) => {
+// Route pour récupérer le profil de l'administrateur
+app.get("/api/profil", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: "Administrateur non trouvé" });
     }
     res.json({
-      username: user.username,
-      email: user.email,
-      fullName: user.fullName,
-      age: user.age,
-      gender: user.gender,
-      contact: user.contact,
-      bio: user.bio,
-      preferences: user.preferences,
+      success: true,
+      profile: {
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        age: user.age,
+        gender: user.gender,
+        contact: user.contact,
+        bio: user.bio,
+        preferences: user.preferences,
+      },
     });
   } catch (err) {
     console.error("Erreur lors de la récupération du profil : ", err);
@@ -138,7 +155,20 @@ app.get("/api/profil", async (req, res) => {
   }
 });
 
-// route pour récupérer les infos du profil d'un ami
+// Route pour récupérer tous les profils des administrateurs
+app.get("/api/users", async (req, res) => {
+  try {
+    const profiles = await User.find({ admin: true });
+    res.json(profiles);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des profils",
+    });
+  }
+});
+
+// Route pour récupérer les infos du profil d'un ami
 app.get("/api/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -146,14 +176,17 @@ app.get("/api/users/:id", async (req, res) => {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
     res.json({
-      username: user.username,
-      email: user.email,
-      fullName: user.fullName,
-      age: user.age,
-      gender: user.gender,
-      contact: user.contact,
-      bio: user.bio,
-      preferences: user.preferences,
+      success: true,
+      profile: {
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        age: user.age,
+        gender: user.gender,
+        contact: user.contact,
+        bio: user.bio,
+        preferences: user.preferences,
+      },
     });
   } catch (err) {
     console.error("Erreur lors de la récupération du profil : ", err);
@@ -163,7 +196,8 @@ app.get("/api/users/:id", async (req, res) => {
     });
   }
 });
-// Route pour mettre à jour le profil de l'ami de l'administrateurs
+
+// Route pour mettre à jour le profil de l'ami de l'administrateur
 app.put(
   "/api/users/:id",
   [
@@ -199,6 +233,7 @@ app.put(
   }
 );
 
+// Route pour l'inscription d'un nouvel utilisateur
 app.post(
   "/api/register",
   [
@@ -239,19 +274,140 @@ app.post(
   }
 );
 
-//Route pour récupérer tous les profils de l'administrateurs
-app.get("/api/users", async (req, res) => {
+// Route pour publier un message
+app.post("/api/messages", authenticateToken, async (req, res) => {
   try {
-    const profiles = await User.find({ admin: true });
-    res.json(profiles);
+    const { content } = req.body;
+    const message = new Message({ content, senderId: req.user.id });
+    await message.save();
+    res.json({ success: true, message: "Message publié avec succès" });
   } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
     res.status(500).json({
       success: false,
-      message: "Erreur lors de la récupération des profils",
+      message: "Erreur lors de la publication du message",
     });
   }
 });
 
+// Route pour récupérer les messages publiés
+app.get("/api/messages", authenticateToken, async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    console.error("Erreur lors de la récupération des messages :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des messages",
+    });
+  }
+});
+
+// Route pour publier un message sur le profil d'un ami
+app.post(
+  "/api/friendMessages/:friendId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { content } = req.body;
+      const friend = await User.findById(req.params.friendId);
+      if (!friend) {
+        return res.status(404).json({ error: "Ami non trouvé" });
+      }
+      const message = new Message({
+        content,
+        sender: req.user.id,
+        recipient: friend._id,
+      });
+      await message.save();
+      res.json({ success: true, content: message.content });
+    } catch (err) {
+      console.error("Erreur lors de la publication du message :", err);
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la publication du message",
+      });
+    }
+  }
+);
+
+// Route pour publier un message sur tous les profils
+app.post("/api/postAllProfiles", authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const users = await User.find();
+
+    const messages = users.map((user) => ({
+      content,
+      senderId: req.user.id,
+      recipientId: user._id,
+    }));
+    await Message.insertMany(messages);
+
+    res.json({ success: true, message: "Message publié sur tous les profils" });
+  } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la publication du message",
+    });
+  }
+});
+
+// Route pour récupérer tous les messages publiés
+app.get("/api/allProfilesMessages", async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: -1 });
+    res.json({ success: true, messages });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des messages :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des messages",
+    });
+  }
+});
+
+// Route pour mettre à jour le profil de l'administrateur
+app.put("/api/profil", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user)
+      return res.status(404).json({ error: "Administrateur non trouvé" });
+
+    // Mise à jour des informations utilisateur
+    Object.assign(user, req.body);
+
+    await user.save();
+    res.json({ success: true, message: "Profil mis à jour" });
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour du profil :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la mise à jour du profil",
+    });
+  }
+});
+
+// Route pour supprimer le profil de l'administrateur
+app.delete("/api/profil", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "Administrateur non trouvé" });
+    }
+    res.json({ success: true, message: "Profil supprimé" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du profil :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression du profil",
+    });
+  }
+});
+
+// Route pour la connexion d'un utilisateur
 app.post(
   "/api/login",
   [
@@ -291,7 +447,8 @@ app.post(
   }
 );
 
-app.post("/api/logout", async (req, res) => {
+// Route pour la déconnexion d'un utilisateur
+app.post("/api/logout", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -308,6 +465,7 @@ app.post("/api/logout", async (req, res) => {
   }
 });
 
+// Route pour la réinitialisation du mot de passe
 app.post(
   "/api/forgot-password",
   [body("email").isEmail().withMessage("Email non validé")],
@@ -349,184 +507,6 @@ app.post(
     }
   }
 );
-
-// Mise à jour du profil de l'administrateur
-
-app.put("/api/profil", async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ error: "Administrateur non trouvé" });
-    }
-    const { username, fullName, age, gender, contact, bio, preferences } =
-      req.body;
-    console.log("Données reçues :", req.body); // Ajouté pour débogage
-
-    user.username = username || user.username;
-    user.fullName = fullName || user.fullName;
-    user.age = age || user.age;
-    user.gender = gender || user.gender;
-    user.contact = contact || user.contact;
-    user.bio = bio || user.bio;
-    user.preferences = preferences || user.preferences;
-
-    await user.save();
-    res.json({ success: true, message: "Profil mis à jour" });
-  } catch (err) {
-    console.error("Erreur lors de la mise à jour du profil :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la mise à jour du profil",
-    });
-  }
-});
-
-// Suppression du profil de l'administrateur
-app.delete("/api/profil", async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.user.id);
-    if (!user) {
-      return res.status(404).json({ error: "Administrateur non trouvé" });
-    }
-    res.json({ success: true, message: "Profil supprimé" });
-  } catch (err) {
-    console.error("Erreur lors de la suppression du profil :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la suppression du profil",
-    });
-  }
-});
-
-// Mise à jour du profil de l'ami de l'administrateur
-app.post(
-  "/api/users/:id",
-  [
-    body("username").optional().isString(),
-    body("fullName").optional().isString(),
-    body("age").optional().isInt({ min: 0 }),
-    body("gender").optional().isIn(["male", "female"]),
-    body("contact").optional().isString(),
-    body("bio").optional().isString(),
-    body("preferences").optional().isString(),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-      });
-      if (!user) {
-        return res.status(404).json({ error: "administrateur non trouvé" });
-      }
-      res.json({ success: true, message: "Profil mis à jour" });
-    } catch (err) {
-      console.error("Erreur lors de la mise à jour du profil :", err);
-      res.status(500).json({
-        success: false,
-        message: "Erreur lors de la mise à jour du profil",
-      });
-    }
-  }
-);
-
-// Route pour que l'administrateur puuisse publier un message
-
-app.post("/api/messages", async (req, res) => {
-  try {
-    const { content } = req.body;
-    const message = new Message({ content });
-    await message.save();
-    res.json({ success: true, content: message.content });
-  } catch (err) {
-    console.error("Erreur lors de la publication du message :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la publication du message",
-    });
-  }
-});
-
-// Route pour que l'administrateur puisse publier un message dans le profil de son ami
-app.post("/api/friendMessages/:friendId", async (req, res) => {
-  try {
-    const { content } = req.body;
-    const friend = await User.findById(req.params.friendId);
-    if (!friend) {
-      return res.status(404).json({ error: "Ami non trouvé" });
-    }
-    const message = new FriendMessage({
-      content,
-      sender: req.user.id,
-      recipient: friend._id,
-    });
-    await message.save();
-    res.json({ success: true, content: message.content });
-  } catch (err) {
-    console.error("Erreur lors de la publication du message :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la publication du message",
-    });
-  }
-});
-
-// Route pour que l'administrateur puisse publier un message sur tous les profils
-
-app.post("/api/postAllProfiles", async (req, res) => {
-  try {
-    const { content } = req.body;
-    const users = await User.find();
-
-    const messages = users.map((user) => ({
-      content,
-      sender: req.user.id,
-      recipient: user._id,
-    }));
-    await FriendMessage.insertMany(messages);
-    res.json({ success: true, message: "Message publié sur tous les profils" });
-  } catch (err) {
-    console.error("Erreur lors de la publication du message :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la publication du message",
-    });
-  }
-});
-
-// Route pour récupérer tous les messages publiés
-
-app.get("/api/messages", async (req, res) => {
-  try {
-    const messages = await Message.find().sort({ createdAt: -1 });
-    res.json({ success: true, messages });
-  } catch (err) {
-    console.error("Erreur lors de la récupération des messages :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la récupération des messages",
-    });
-  }
-});
-
-// Route pour récupérer tous les messages publiés sur tous les profils
-
-app.get("/api/allProfilesMessages", async (req, res) => {
-  try {
-    const messages = await FriendMessage.find().sort({ date: -1 });
-    res.json({ success: true, messages });
-  } catch (err) {
-    console.error("Erreur lors de la récupération des messages :", err);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la récupération des messages",
-    });
-  }
-});
 
 app.listen(port, () => {
   console.log(`Serveur démarré sur le port ${port}`);

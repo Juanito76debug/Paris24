@@ -247,7 +247,7 @@ window.onload = function () {
 
     // Gestionnaire d'evenement pour modifier le profil de l'administrateur
     document
-      .getElementById("AdminProfileForm")
+      .getElementById("adminProfileForm")
       .addEventListener("submit", async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -513,14 +513,13 @@ window.onload = function () {
 
 // formulaire pour publier un message sur le profil de l'administrateur
 document.addEventListener("DomContentLoaded", function () {
-  const posthMessageForm = document.getElementById("postshMessageForm");
+  const postMessageForm = document.getElementById("posthMessageForm");
   const messagesList = document.getElementById("messagesList");
 
-  publishMessageForm.addEventListener("submit", async function (event) {
+  postMessageForm.addEventListener("submit", async function (event) {
     event.preventDefault();
-    const formData = new FormData(publishMessageForm);
+    const formData = new FormData(postMessageForm);
     const payload = Object.fromEntries(formData.entries());
-
     try {
       const response = await fetch("http://localhost:3000/api/messages", {
         method: "POST",
@@ -533,7 +532,7 @@ document.addEventListener("DomContentLoaded", function () {
       const data = await response.json();
       if (response.ok) {
         alert("Message publié avec succès!");
-        posthMessageForm.reset();
+        postMessageForm.reset();
         loadMessages();
       } else {
         alert("Erreur lors de la publication du message : " + data.message);
@@ -571,6 +570,8 @@ document.addEventListener("DomContentLoaded", function () {
   }
 
   loadMessages();
+  // Charger le profil lors du chargement de la page
+  loadAdminProfile();
 });
 
 // formulaire pour publier un message sur le profil de l'ami de l'administrateur
@@ -651,6 +652,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const formData = new FormData(postAllProfilesForm);
     const payload = Object.fromEntries(formData.entries());
 
+    if (!payload.message.trim()) {
+      payload.message = "Bonjour";
+    }
+    //Vérification du token existant
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert(
+        "Veuillez vous connecter pour publier un message sur tous les profils."
+      );
+      return;
+    }
+
     try {
       const response = await fetch(
         "http://localhost:3000/api/postAllProfiles",
@@ -658,7 +671,7 @@ document.addEventListener("DOMContentLoaded", function () {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         }
@@ -667,7 +680,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (response.ok) {
         alert("Message publié avec succès sur tous les profils !");
         postAllProfilesForm.reset();
-        loadAllProfilesMessages();
+        const newMessage = document.createElement("li");
+        newMessage.classList.add("list-group-item");
+        newMessage.textContent = payload.message;
+        allProfilesMessagesList.prepend(newMessage);
       } else {
         alert("Erreur lors de la publication du message : " + data.message);
       }
