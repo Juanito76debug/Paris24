@@ -343,12 +343,6 @@ window.onload = function () {
           document.getElementById("adminPhone").value = payload.phone;
           document.getElementById("adminPreferences").value =
             payload.preferences;
-          //fermeture de la modale
-          const editProfileModal = new bootstrap.Modal(
-            document.getElementById("editProfileModal")
-          );
-          editProfileModal.hide();
-          // rechargement du profil après mise à jour
         } else {
           alert("Erreur lors de la mise à jour du profil : " + data.message);
         }
@@ -414,7 +408,9 @@ window.onload = function () {
           throw new Error("Problème pour obtenir le profil de l'ami");
         }
         const data = await response.json();
-        document.getElementById("FriendProfileSection").style.display = "block";
+        document
+          .getElementById("editFriendProfileSection")
+          .classList.add("editFriendProfile");
         document.getElementById("FriendUsername").value = data.username;
         document.getElementById("FriendFullName").value = data.fullName;
         document.getElementById("FriendAge").value = data.age;
@@ -470,6 +466,53 @@ window.onload = function () {
       }
     };
 
+    // Fonction pour supprimer le profil de l'ami de l'administrateur
+    window.deleteFriendProfile = async function (userId) {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/users/${userId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Problème pour supprimer le profil de l'ami");
+        }
+        alert("Suppression du profil de l'ami réussie");
+        document
+          .getElementById("editFriendProfileSection")
+          .classList.remove("editFriendProfile");
+      } catch (error) {
+        console.error(
+          "Erreur lors de la suppression du profil de l'ami : ",
+          error
+        );
+        alert(
+          "Erreur lors de la suppression du profil de l'ami : " + error.message
+        );
+      }
+    };
+
+    // Gestionnaire d'evenements pour le bouton de modification de profil de l'administrateur
+    document
+      .getElementById("editProfileButton")
+      .addEventListener("click", function () {
+        alert("Profil modifié dans les champs fournis");
+      });
+
+    // gestionnaire d'evenements pour affichage de la suppression du profil
+    document
+      .getElementById("deleteProfileButton")
+      .addEventListener("click", function () {
+        document
+          .getElementById("deleteProfileSection")
+          .classList.remove("d-none");
+      });
+
     // Gestionnaire d'événements pour le bouton de confirmation de suppression
     document
       .getElementById("confirmDeleteProfile")
@@ -498,9 +541,9 @@ window.onload = function () {
 
     // Gestionnaire d'événements pour le bouton d'annulation de suppression
     document
-      .querySelector("#deleteProfileSection .btn-secondary")
+      .getElementById("cancelDeleteProfile")
       .addEventListener("click", function () {
-        hideDeleteProfileSection();
+        document.getElementById("deleteProfileSection").classList.add("d-none");
       });
 
     // Charger le profil lors du chargement de la page

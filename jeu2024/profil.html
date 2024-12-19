@@ -130,7 +130,7 @@
                     name="Bio"
                     rows="3"
                   >
-                  Passionné par les jeux olympiques</textarea
+Passionné par les jeux olympiques</textarea
                   >
                 </div>
                 <div class="mb-3">
@@ -146,16 +146,15 @@
                   />
                 </div>
                 <!--modification du profil de l'administrateur-->
-
                 <button type="submit" class="btn btn-primary">
-                  Modification enregistré
+                  Modification enregistrée
                 </button>
               </form>
               <button
                 type="button"
-                class="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#editProfileModal"
+                class="btn btn-warning mt-2"
+                data-bs-toggle="collapse"
+                data-bs-target="#editProfileSection"
               >
                 Modifier le profil
               </button>
@@ -163,8 +162,8 @@
               <button
                 type="button"
                 class="btn btn-danger mt-2"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteProfileModal"
+                data-bs-toggle="collapse"
+                data-bs-target="#deleteProfileSection"
               >
                 Supprimer
               </button>
@@ -174,114 +173,62 @@
       </div>
     </div>
 
-    <!-- Modal pour la modification du profil -->
-    <div
-      class="modal fade"
-      id="editProfileModal"
-      tabindex="-1"
-      aria-labelledby="editProfileModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editProfileModalLabel">
-              Modifier le profil
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            êtes-vous sur de vouloir modifier votre profil?
-            <form id="editProfileForm">
-              <div class="mb-3">
-                <label for="editAge" class="form-label">Age</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="editAge"
-                  name="editAge"
-                  value="48"
-                />
-              </div>
-              <div class="mb-3">
-                <label for="editPhone" class="form-label">Téléphone</label>
-                <input
-                  type="tel"
-                  class="form-control"
-                  id="editPhone"
-                  name="editPhone"
-                  value="0123456789"
-                />
-              </div>
-              <div class="mb-3">
-                <label for="editPreferences" class="form-label"
-                  >Préférences</label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="editPreferences"
-                  name="editPreferences"
-                  value="adore le foot"
-                />
-              </div>
-              <button type="submit" class="btn btn-primary">
-                Modification enregistré.
-              </button>
-            </form>
-          </div>
+    <!--  Section destinée à la modification du profil -->
+    <div class="collapse alert alert-warning mt-3" id="editProfileSection">
+      <form id="editProfileForm">
+        <div class="mb-3">
+          <label for="editAge" class="form-label">Âge</label>
+          <input
+            type="number"
+            class="form-control"
+            id="editAge"
+            name="editAge"
+            value="48"
+          />
         </div>
-      </div>
+        <div class="mb-3">
+          <label for="editPhone" class="form-label">Téléphone</label>
+          <input
+            type="tel"
+            class="form-control"
+            id="editPhone"
+            name="editPhone"
+            value="0123456789"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="editPreferences" class="form-label">Préférences</label>
+          <input
+            type="text"
+            class="form-control"
+            id="editPreferences"
+            name="editPreferences"
+            value="adore le foot"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Modification enregistrée
+        </button>
+      </form>
     </div>
 
-    <!-- Modal pour la confirmation de suppression -->
-    <div
-      class="modal fade"
-      id="deleteProfileModal"
-      tabindex="-1"
-      aria-labelledby="deleteProfileModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="deleteProfileModalLabel">
-              Supprimer le profil de l'Administrateur
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            Souhaitez-vous supprimer votre profil administrateur? Cette action
-            est indéfinie.
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Annuler
-            </button>
-            <button
-              type="button"
-              class="btn btn-danger"
-              id="confirmDeleteProfile"
-            >
-              Supprimer
-            </button>
-          </div>
-        </div>
-      </div>
+    <!--confirmation de suppression -->
+    <div id="deleteProfileSection" class="collapse alert alert-danger mt-3">
+      <p>
+        Souhaitez-vous supprimer votre profil administrateur? Cette action est
+        définitive.
+      </p>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        data-bs-toggle="collapse"
+        data-bs-target="#deleteProfileSection"
+      >
+        Annuler
+      </button>
+      <button type="button" class="btn btn-danger" id="confirmDeleteProfile">
+        Supprimer
+      </button>
     </div>
 
     <!--L'administrateur publie un message sur son profil-->
@@ -428,17 +375,16 @@ Bonjour</textarea
               <button
                 type="button"
                 class="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#editFriendProfileModal"
+                data-bs-toggle="collapse"
+                data-bs-target="#editFriendProfileSection"
               >
                 Modifier le profil de l'Ami.
               </button>
               <button
                 type="button"
-                class="btn btn-danger"
-                id="deleteFriendProfile"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteFriendProfileModal"
+                class="btn btn-danger mt-2"
+                data-bs-toggle="collapse"
+                data-bs-target="#deleteFriendProfileSection"
               >
                 Supprimer le Profil de l'Ami
               </button>
@@ -446,6 +392,71 @@ Bonjour</textarea
           </div>
         </div>
       </div>
+    </div>
+
+    <!--Section destinée à la modification du profil de l'ami-->
+    <div
+      id="editFriendProfileSection"
+      class="collapse alert alert-warning mt-3"
+    >
+      <form id="editFriendProfileForm">
+        <div class="mb-3">
+          <label for="editAge" class="form-label">Âge</label>
+          <input
+            type="number"
+            class="form-control"
+            id="editAge"
+            name="editAge"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="editPhone" class="form-label">Téléphone</label>
+          <input
+            type="tel"
+            class="form-control"
+            id="editPhone"
+            name="editPhone"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="editPreferences" class="form-label">Préférences</label>
+          <input
+            type="text"
+            class="form-control"
+            id="editPreferences"
+            name="editPreferences"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Modification enregistrée
+        </button>
+      </form>
+    </div>
+
+    <!--confirmation de suppression du profil de l'ami-->
+    <div
+      id="deleteFriendProfileSection"
+      class="collapse alert alert-danger mt-3"
+    >
+      <p>
+        Souhaitez-vous supprimer votre profil de l'ami? Cette action est
+        définitive.
+      </p>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        data-bs-toggle="collapse"
+        data-bs-target="#deleteFriendProfileSection"
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger"
+        id="confirmDeleteFriendProfile"
+      >
+        Supprimer
+      </button>
     </div>
 
     <!--publication d'un message sur le profil de l'ami de l'administrateur-->
