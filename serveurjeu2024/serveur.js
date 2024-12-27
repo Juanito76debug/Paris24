@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import cors from "cors";
 import { body, validationResult } from "express-validator";
+import authenticateToken from "./authmiddleware.js";
 
 dotenv.config();
 
@@ -75,20 +76,10 @@ const sendEmailConfirmation = async (email, subject, message) => {
   }
 };
 
-// Middleware pour l'authentification
-const authenticateToken = async (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
-
-  if (!token) return res.status(401).json({ error: "Token non fourni" });
-
-  try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = user;
-    next();
-  } catch (err) {
-    return res.status(403).json({ error: "Token invalide" });
-  }
-};
+// Route pour validation du token
+app.post("/api/verifyToken", authenticateToken, (req, res) => {
+  res.json({ message: "Token valide" });
+});
 
 // Route pour récupérer le nombre de messages
 app.get("/api/messageCount", async (req, res) => {
@@ -332,6 +323,27 @@ app.post(
   }
 );
 
+// // Route pour récupérer les messages publiés du profil de l'ami
+
+app.get(
+  "/api/friendMessages/:friendId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const messages = await Message.find({
+        recipient: req.params.friendId,
+      }).sort({ createdAt: -1 });
+      res.json({ success: true, messages });
+    } catch (err) {
+      console.error("Erreur lors de la récupération des messages :", err);
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la récupération des messages",
+      });
+    }
+  }
+);
+
 // Route pour publier un message sur tous les profils
 app.post("/api/postAllProfiles", authenticateToken, async (req, res) => {
   try {
@@ -356,7 +368,7 @@ app.post("/api/postAllProfiles", authenticateToken, async (req, res) => {
 });
 
 // Route pour récupérer tous les messages publiés
-app.get("/api/allProfilesMessages", async (req, res) => {
+app.get("/api/allProfilesMessages", authenticateToken, async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
     res.json({ success: true, messages });
@@ -438,6 +450,7 @@ app.post(
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
+
       res.json({ success: true, token });
     } catch (err) {
       res
@@ -505,6 +518,60 @@ app.post(
         message: "Erreur lors de la réinitialisation du mot de passe",
       });
     }
+  }
+);
+
+// Route pour répondre à un message sur le profil de l'administrateur
+
+app.post(
+  "/api/messages/: messageId/replies",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { content } = req.body;
+      const message = await Message.findById(req.params.messageId);
+      if (!message) {
+        return res.status(404).json({ error: "Message non trouvé" });
+      }
+      const reply = new Message({
+        content,
+        senderId: req.user.id,
+        recipientId: message.senderId,
+      });
+      await reply.save();
+      res.json({ success: true, content: reply.content });
+    } catch (err) {
+      console.error("Erreur lors de la réponse au message :", err);
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la réponse au message",
+      });
+    }
+
+    //Route pour récupération des réponses à un message
+    app.get(
+      "/api/messages/:messageId/replies",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const message = await Message.findById(req.params.messageId);
+          if (!message) {
+            return res.status(404).json({ error: "Message non trouvé" });
+          }
+          const replies = await Message.find({
+            recipientId: req.user.id,
+            senderId: message.senderId,
+          });
+          res.json({ success: true, replies });
+        } catch (err) {
+          console.error("Erreur lors de la récupération des réponses :", err);
+          res.status(500).json({
+            success: false,
+            message: "Erreur lors de la récupération des réponses",
+          });
+        }
+      }
+    );
   }
 );
 

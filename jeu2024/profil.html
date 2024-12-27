@@ -245,6 +245,7 @@ Passionné par les jeux olympiques</textarea
                     id="postMessage"
                     name="message"
                     rows="3"
+                    placeholder="message a écrire ici..."
                   >
 Bonjour</textarea
                   >
@@ -265,6 +266,29 @@ Bonjour</textarea
             <div class="card-body">
               <h5 class="card-title">Messages publiés</h5>
               <div id="messagesList" class="list-group"></div>
+              <!--L'administrateur répond à un message sur son profil-->
+              <div class="list-group-item">
+                <small class="text-muted"> </small>
+                <!--réponse du message-->
+                <div class="mt-3">
+                  <form class="replyForm">
+                    <div class="mb-3">
+                      <textarea
+                        class="form-control"
+                        name="reply"
+                        rows="3"
+                        placeholder="réponse a écrire ici..."
+                      >
+ Bienvenue dans le groupe des Jeux Olympiques 2024</textarea
+                      >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                      Répondre
+                    </button>
+                  </form>
+                  <div class="repliesList mt-3"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -541,17 +565,16 @@ Bonjour</textarea
                 <button
                   type="button"
                   class="btn btn-primary"
-                  data-bs-toggle="modal"
-                  data-bs-target="#addUserModal"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#editAllProfileSection"
                 >
                   Modifier tous les profils
                 </button>
                 <button
                   type="button"
                   class="btn btn-danger"
-                  id="deleteAllProfiles"
-                  data-bs-toggle="modal"
-                  data-bs-target="#deleteUserModal"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#deleteAllProfilesSection"
                 >
                   Supprimer tous les profils
                 </button>
@@ -559,6 +582,67 @@ Bonjour</textarea
             </div>
           </div>
         </div>
+      </div>
+      <!--Section destinée à la modification de tous les profils-->
+      <div id="editAllProfileSection" class="collapse alert alert-warning mt-3">
+        <form id="editAllProfilesForm">
+          <div class="mb-3">
+            <label for="editAge" class="form-label">age</label>
+            <input
+              type="number"
+              class="form-control"
+              id="editAge"
+              name="editAge"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="editPhone" class="form-label">Téléphone</label>
+            <input
+              type="tel"
+              class="form-control"
+              id="editPhone"
+              name="editPhone"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="editPreferences" class="form-label">Préférences</label>
+            <input
+              type="text"
+              class="form-control"
+              id="editPreferences"
+              name="editPreferences"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">
+            Modification enregistrée
+          </button>
+        </form>
+      </div>
+
+      <!--confirmation de suppression de tous les profils-->
+      <div
+        id="deleteAllProfilesSection"
+        class="collapse alert alert-danger mt-3"
+      >
+        <p>
+          Souhaitez-vous supprimer tous les profils? Cette action est
+          définitive.
+        </p>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-toggle="collapse"
+          data-bs-target="#deleteAllProfilesSection"
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          id="confirmDeleteAllProfile"
+        >
+          Supprimer
+        </button>
       </div>
 
       <!--publication d'un message sur tous les profils de l'administrateurs-->
@@ -575,7 +659,10 @@ Bonjour</textarea
                       id="postAllprofilesMessage"
                       name="message"
                       rows="3"
-                    ></textarea>
+                      placeholder="message a écrire ici..."
+                    >
+Bonjour</textarea
+                    >
                   </div>
                   <button type="submit" class="btn btn-primary">Publier</button>
                 </form>

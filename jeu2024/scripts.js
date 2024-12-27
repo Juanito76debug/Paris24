@@ -93,31 +93,27 @@ window.onload = function () {
   }
 
   // Formulaire de connexion pour l'utilisateur
-  const loginForm = document.getElementById("loginForm");
-  const errorMessagesLogin = document.getElementById("errorMessagesLogin");
+  document.addEventListener("DOMContentLoaded", function () {
+    const loginForm = document.getElementById("loginForm");
+    const errorMessagesLogin = document.getElementById("errorMessagesLogin");
 
-  if (loginForm) {
-    loginForm.addEventListener("submit", function (event) {
-      event.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+    if (loginForm) {
+      loginForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const formData = new FormData(loginForm);
+        const payload = Object.fromEntries(formData.entries());
 
-      fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            return response.json().then((data) => {
-              throw new Error(data.message || "Login failed");
-            });
-          }
-          return response.json();
-        })
-        .then((data) => {
-          if (data.success) {
+        try {
+          const response = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+          if (response.ok) {
             alert("Connexion réussie!");
+            localStorage.setItem("token", data.token); // Stockage du token dans le localStorage
             window.location.href = "profil.html";
           } else {
             errorMessagesLogin.style.display = "block";
@@ -125,13 +121,13 @@ window.onload = function () {
               .map((error) => `<p>${error.msg}</p>`)
               .join("");
           }
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error("Erreur lors de la connexion :", error);
           alert("Erreur lors de la connexion : " + error.message);
-        });
-    });
-  }
+        }
+      });
+    }
+  });
 
   // Vérification du formulaire de réinitialisation du mot de passe
   const forgotPasswordForm = document.getElementById("forgotPasswordForm");
@@ -246,6 +242,7 @@ window.onload = function () {
     }
 
     // Gestionnaire d'evenement pour modifier le profil de l'administrateur
+    document.addEventListener("DOMContentLoaded", loadAdminProfile);
     document
       .getElementById("adminProfileForm")
       .addEventListener("submit", async (event) => {
@@ -319,7 +316,7 @@ window.onload = function () {
       }
     }
 
-    // Mise à jour du profil de l'administrateur en modale
+    // Mise à jour du profil de l'administrateur
     const editProfileForm = document.getElementById("editProfileForm");
 
     editProfileForm.addEventListener("submit", async function (event) {
@@ -353,6 +350,7 @@ window.onload = function () {
     });
 
     // Fonction pour voir le profil d'un ami de l'administrateur
+    document.addEventListener("DOMContentLoaded", loadAdminProfile);
     window.viewFriendProfile = async function (userId) {
       try {
         const response = await fetch(
@@ -554,118 +552,506 @@ window.onload = function () {
   });
 };
 
+document.addEventListener("DOMContentLoaded", function () {
+  // Gestionnaire d'événements pour modifier tous les profils de l'administrateur
+  const editAllProfileSection = document.getElementById(
+    "editAllProfileSection"
+  );
+  if (editAllProfileSection) {
+    editAllProfileSection.addEventListener("click", async function () {
+      alert("Tous les profils modifiés");
+    });
+  }
+
+  // Gestionnaire d'événements pour affichage de la suppression de tous les profils de l'administrateur
+  const deleteAllProfileSection = document.getElementById(
+    "deleteAllProfileSection"
+  );
+  if (deleteAllProfileSection) {
+    deleteAllProfileSection.addEventListener("click", function () {
+      deleteAllProfileSection.classList.remove("d-none");
+    });
+  }
+
+  // Gestionnaire d'événements pour le bouton de confirmation de suppression de tous les profils
+  const confirmDeleteAllProfiles = document.getElementById(
+    "confirmDeleteAllProfiles"
+  );
+  if (confirmDeleteAllProfiles) {
+    confirmDeleteAllProfiles.addEventListener("click", async function () {
+      try {
+        const response = await fetch("http://localhost:3000/api/profiles", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert("Tous les profils supprimés avec succès!");
+          deleteAllProfileSection.classList.add("d-none");
+        } else {
+          alert(
+            "Erreur lors de la suppression de tous les profils : " +
+              data.message
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de la suppression de tous les profils : ",
+          error
+        );
+        alert(
+          "Erreur lors de la suppression de tous les profils : " + error.message
+        );
+      }
+    });
+  }
+});
+
 // formulaire pour publier un message sur le profil de l'administrateur
-document.addEventListener("DomContentLoaded", function () {
-  const postMessageForm = document.getElementById("posthMessageForm");
+document.addEventListener("DOMContentLoaded", function () {
+  const postMessageForm = document.getElementById("postMessageForm");
   const messagesList = document.getElementById("messagesList");
 
-  postMessageForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const formData = new FormData(postMessageForm);
-    const payload = Object.fromEntries(formData.entries());
+  async function isValidToken(token) {
     try {
-      const response = await fetch("http://localhost:3000/api/messages", {
+      const response = await fetch("http://localhost:3000/api/verifyToken", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
       });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Message publié avec succès!");
-        postMessageForm.reset();
-        loadMessages();
-      } else {
-        alert("Erreur lors de la publication du message : " + data.message);
+      if (!response.ok) {
+        console.warn("Token non valide", response.status, data);
+        return false;
       }
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la publication du message : ", error);
-      alert("Erreur lors de la publication du message : " + error.message);
+      console.warn("Erreur lors de la vérification du token : ", error);
+      return false;
     }
-  });
+  }
 
-  // Charger les messages lors du chargement de la page
+  if (postMessageForm) {
+    postMessageForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const formData = new FormData(postMessageForm);
+      const payload = Object.fromEntries(formData.entries());
+
+      if (!payload.message.trim()) {
+        alert("Veuillez entrer un message");
+        return;
+      }
+
+      // Message de débogage
+      try {
+        const token = localStorage.getItem("token");
+        console.log("Token récupéré :", token);
+
+        if (!token) {
+          console.warn("Token non valide");
+          alert("Token non valide. Veuillez vous reconnecter.");
+          return;
+        }
+        const isValid = await isValidToken(token);
+        if (!isValid) {
+          console.warn("Token non valide");
+          alert("Token non valide. Veuillez vous reconnecter.");
+          return;
+        }
+
+        const response = await fetch("http://localhost:3000/api/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert("Message publié avec succès!");
+          postMessageForm.reset();
+          loadMessages();
+        } else {
+          alert("Erreur lors de la publication du message : " + data.message);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la publication du message : ", error);
+        alert("Erreur lors de la publication du message. Veuillez réessayer.");
+      }
+    });
+  }
+
   async function loadMessages() {
     try {
+      const token = localStorage.getItem("token");
+      console.log("Token récupéré pour charger les messages :", token); // Message de débogage
+
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+
+      const isValid = await isValidToken(token);
+      if (!isValid) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+
       const response = await fetch("http://localhost:3000/api/messages", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
+
       if (!response.ok) {
-        throw new Error("Problème pour obtenir les messages");
+        console.warn("Problème pour obtenir les messages");
+        alert(
+          "Problème pour obtenir les messages. Veuillez réessayer plus tard."
+        );
+        return;
       }
+
       const data = await response.json();
-      messagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      messagesList.innerHTML = "";
       data.forEach((message) => {
         const li = document.createElement("li");
-        li.textContent = message.message;
+        li.textContent = message.content;
         messagesList.appendChild(li);
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des messages : ", error);
-      alert("Erreur lors de la récupération des messages : " + error.message);
+      alert(
+        "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
+      );
     }
   }
 
   loadMessages();
-  // Charger le profil lors du chargement de la page
-  loadAdminProfile();
+});
+
+// Formulaire pour répondre à un message sur le profil de l'administrateur
+
+document.addEventListener("DOMContentLoaded", function () {
+  const messagesList = document.getElementById("messagesList");
+
+  async function isValidToken(token) {
+    try {
+      const response = await fetch("http://localhost:3000/api/verifyToken", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn("Token non valide");
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.warn("Erreur lors de la vérification du token : ", error);
+      return false;
+    }
+  }
+  async function loadMessages() {
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token récupéré pour charger les messages :", token); // Message de débogage
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const isValid = await isValidToken(token);
+      if (!isValid) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const response = await fetch("http://localhost:3000/api/messages", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les messages");
+        alert(
+          "Problème pour obtenir les messages. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+
+      const data = await response.json();
+      messagesList.innerHTML = "";
+      data.forEach((message) => {
+        const messageItem = document.createElement("div");
+        messageItem.classList.add("list-group-item");
+        messageItem.innerHTML = `
+        <p>${message.content}</p>
+        <small class="text-muted"></small>
+        <div class="mt-3">
+        <form class="replyForm" data-message-id="${message._id}">
+        <div class="mb-3">
+        <textarea class="form-control"
+        name="reply"
+        rows="3"
+        placeholder="Répondre..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm">Répondre</button>
+        </form>
+        <div class="repliesList mt-3"></div>
+        </div>
+      `;
+        messagesList.appendChild(messageItem);
+
+        // chargement des réponses pour ce message
+        loadReplies(message._id, messageItem.querySelector(".repliesList"));
+      });
+
+      // Gestionnaire d'événements pour les formulaire de réponse sur le profil de l'administrateur
+      document.querySelectorAll(".replyForm").forEach((form) => {
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const messageId = form.getAttribute("data-message-id");
+          const formData = new FormData(form);
+          const payload = Object.fromEntries(formData.entries());
+
+          if (!payload.reply.trim()) {
+            alert("Veuillez répondre au message");
+            return;
+          }
+
+          try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+              console.warn("Token non valide");
+              alert("Token non valide. Veuillez vous reconnecter.");
+              return;
+            }
+            const isValid = await isValidToken(token);
+            if (!isValid) {
+              console.warn("Token non valide");
+              alert("Token non valide. Veuillez vous reconnecter.");
+              return;
+            }
+            const response = await fetch(
+              `http://localhost:3000/api/messages/${messageId}/replies`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ content: payload.reply }),
+              }
+            );
+
+            const data = await response.json();
+            if (response.ok) {
+              alert("Réponse publiée avec succès!");
+              form.reset();
+              loadReplies(
+                messageId,
+                form.closest(".list-group-item").querySelector(".repliesList")
+              );
+            } else {
+              alert(
+                "Erreur lors de la publication de la réponse : " + data.message
+              );
+            }
+          } catch (error) {
+            console.error(
+              "Erreur lors de la publication de la réponse : ",
+              error
+            );
+            alert(
+              "Erreur lors de la publication de la réponse:" + error.message
+            );
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des messages : ", error);
+      alert(
+        "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
+      );
+    }
+  }
+  async function loadReplies(messageId, repliesList) {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+
+      const isValid = await isValidToken(token);
+      if (!isValid) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const response = await fetch(
+        `http://localhost:3000/api/messages/${messageId}/replies`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les réponses");
+        alert(
+          "Problème pour obtenir les réponses. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+      const data = await response.json();
+      repliesList.innerHTML = "";
+      data.forEach((reply) => {
+        const replyItem = document.createElement("div");
+        replyItem.classList.add("list-group-item");
+        replyItem.innerHTML = `
+      <p>${reply.content}</p>
+      <small class="text-muted"></small>
+      `;
+        repliesList.appendChild(replyItem);
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des réponses : ", error);
+      alert(
+        "Erreur lors de la récupération des réponses. Veuillez réessayer plus tard."
+      );
+    }
+  }
+
+  loadMessages();
 });
 
 // formulaire pour publier un message sur le profil de l'ami de l'administrateur
 
-document.addEventListener("DomContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   const friendpostMessageForm = document.getElementById(
     "friendPostMessageForm"
   );
   const friendMessagesList = document.getElementById("friendmessagesList");
 
-  friendpostMessageForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const formData = new FormData(friendpostMessageForm);
-    const payload = Object.fromEntries(formData.entries());
-
+  async function isValidToken(token) {
     try {
-      const response = await fetch("http://localhost:3000/api/friendMessages", {
+      const response = await fetch("http://localhost:3000/api/verifyToken", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
       });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Message publié avec succès!");
-        friendpostMessageForm.reset();
-        loadFriendMessages();
-      } else {
-        alert("Erreur lors de la publication du message : " + data.message);
+      if (!response.ok) {
+        console.warn("Token non valide");
+        return false;
       }
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la publication du message : ", error);
-      alert("Erreur lors de la publication du message : " + error.message);
+      console.warn("Erreur lors de la vérification du token : ", error);
+      return false;
     }
-  });
+  }
+  if (friendpostMessageForm) {
+    friendpostMessageForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const formData = new FormData(friendpostMessageForm);
+      const payload = Object.fromEntries(formData.entries());
+      if (!payload.message.trim()) {
+        alert("Veuillez entrer un message");
+        return;
+      }
+      // Message de débogage
+      try {
+        const token = localStorage.getItem("token");
+        console.log("Token récupéré pour charger les messages :", token);
+        if (!token) {
+          console.warn("Token non valide");
+          alert("Token non valide. Veuillez vous reconnecter.");
+          return;
+        }
+        const isValid = await isValidToken(token);
+        if (!isValid) {
+          console.warn("Token non valide");
+          alert("Token non valide. Veuillez vous reconnecter.");
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:3000/api/friendMessages",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          alert("Message publié avec succès!");
+          friendpostMessageForm.reset();
+          loadFriendMessages();
+        } else {
+          alert("Erreur lors de la publication du message : " + data.message);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la publication du message : ", error);
+        alert("Erreur lors de la publication du message : " + error.message);
+      }
+    });
+  }
 
   // Charger les messages lors du chargement de la page
 
   async function loadFriendMessages() {
     try {
+      const token = localStorage.getItem("token");
+      console.log("Token récupéré pour charger les messages :", token);
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const isValid = await isValidToken(token);
+      if (!isValid) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
       const response = await fetch("http://localhost:3000/api/friendMessages", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) {
-        throw new Error("Problème pour obtenir les messages");
+        console.warn("Problème pour obtenir les messages");
+        alert(
+          "Problème pour obtenir les messages. Veuillez réessayer plus tard."
+        );
+        return;
       }
       const data = await response.json();
       friendMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
@@ -690,55 +1076,88 @@ document.addEventListener("DOMContentLoaded", function () {
     "allProfilesMessagesList"
   );
 
-  postAllProfilesForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const formData = new FormData(postAllProfilesForm);
-    const payload = Object.fromEntries(formData.entries());
-
-    if (!payload.message.trim()) {
-      payload.message = "Bonjour";
-    }
-    //Vérification du token existant
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert(
-        "Veuillez vous connecter pour publier un message sur tous les profils."
-      );
-      return;
-    }
-
+  async function isValidToken(token) {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/postAllProfiles",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      const data = await response.json();
-      if (response.ok) {
-        alert("Message publié avec succès sur tous les profils !");
-        postAllProfilesForm.reset();
-        const newMessage = document.createElement("li");
-        newMessage.classList.add("list-group-item");
-        newMessage.textContent = payload.message;
-        allProfilesMessagesList.prepend(newMessage);
-      } else {
-        alert("Erreur lors de la publication du message : " + data.message);
+      const response = await fetch("http://localhost:3000/api/verifyToken", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        console.warn("Token non valide");
+        return false;
       }
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la publication du message : ", error);
-      alert("Erreur lors de la publication du message : " + error.message);
+      console.warn("Erreur lors de la vérification du token : ", error);
+      return false;
     }
-  });
+  }
+
+  if (postAllProfilesForm) {
+    postAllProfilesForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const formData = new FormData(postAllProfilesForm);
+      const payload = Object.fromEntries(formData.entries());
+      if (!payload.message.trim()) {
+        alert("Veuillez entrer un message");
+        return;
+      }
+      // Message de débogage
+      try {
+        const token = localStorage.getItem("token");
+        console.log("Token récupéré pour charger les messages :", token);
+        if (!token) {
+          console.warn("Token non valide");
+          alert("Token non valide. Veuillez vous reconnecter.");
+          return;
+        }
+        const isValid = await isValidToken(token);
+        if (!isValid) {
+          console.warn("Token non valide");
+          alert("Token non valide. Veuillez vous reconnecter.");
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:3000/api/postAllProfiles",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          alert("Message publié avec succès sur tous les profils !");
+          postAllProfilesForm.reset();
+          loadAllProfilesMessages();
+        } else {
+          alert("Erreur lors de la publication du message : " + data.message);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la publication du message : ", error);
+        alert("Erreur lors de la publication du message : " + error.message);
+      }
+    });
+  }
 
   // Charger les messages lors du chargement de la page
   async function loadAllProfilesMessages() {
     try {
+      const token = localStorage.getItem("token");
+      console.log("Token récupéré pour charger les messages :", token);
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+
       const response = await fetch(
         "http://localhost:3000/api/allProfilesMessages",
         {
@@ -750,7 +1169,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       );
       if (!response.ok) {
-        throw new Error("Problème pour obtenir les messages");
+        console.warn("Problème pour obtenir les messages");
+        alert(
+          "Problème pour obtenir les messages. Veuillez réessayer plus tard."
+        );
+        return;
       }
       const data = await response.json();
       allProfilesMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
