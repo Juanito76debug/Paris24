@@ -1068,6 +1068,217 @@ document.addEventListener("DOMContentLoaded", function () {
   loadFriendMessages();
 });
 
+// Formulaire pour répondre à un message sur le profil de l'ami
+
+document.addEventListener("DOMContentLoaded", function () {
+  const friendMessagesList = document.getElementById("friendMessagesList");
+
+  async function isValidToken(token) {
+    try {
+      const response = await fetch("http://localhost:3000/api/verifyToken", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        console.warn("Token non valide");
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.warn("Erreur lors de la vérification du token : ", error);
+      return false;
+    }
+  }
+
+  //Message de débogage
+  async function loadFriendMessages() {
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token récupéré pour charger les messages :", token);
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const isValid = await isValidToken(token);
+      if (!isValid) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const response = await fetch("http://localhost:3000/api/friendMessages", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les messages");
+        alert(
+          "Problème pour obtenir les messages. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+
+      const data = await response.json();
+      friendMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      data.forEach((message) => {
+        const messageItem = document.createElement("div");
+        messageItem.classList.add("list-group-item");
+        messageItem.innerHTML = `
+        <p>${message.content}</p>
+        <small class="text-muted"></small>
+        <div class="mt-3">
+        <form class="replyForm" data-message-id="${message._id}">
+        <div class="mb-3">
+        <textarea class="form-control"
+        name="reply"
+        rows="3"
+        placeholder="Répondre..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm">Répondre</button>
+        </form>
+        <div class="friendrepliesList mt-3"></div>
+        </div>
+      `;
+        friendMessagesList.appendChild(messageItem);
+
+        //chargement des réponses pour ce message
+        loadFriendReplies(
+          message._id,
+          messageItem.querySelector(".friendRepliesList")
+        );
+      });
+
+      // Gestionnaire d'événements pour le formulaire de réponse sur le profil de l'ami
+      document.querySelectorAll(".friendReplyForm").forEach((form) => {
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const payload = Object.fromEntries(formData.entries());
+          if (!payload.reply.trim()) {
+            alert("Veuillez répondre au message");
+            return;
+          }
+
+          try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+              console.warn("Token non valide");
+              alert("Token non valide. Veuillez vous reconnecter.");
+              return;
+            }
+            const isValid = await isValidToken(token);
+            if (!isValid) {
+              console.warn("Token non valide");
+              alert("Token non valide. Veuillez vous reconnecter.");
+              return;
+            }
+            const response = await fetch(
+              `http://localhost:3000/api/friendMessages/${messageId}/replies`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ content: payload.reply }),
+              }
+            );
+
+            const data = await response.json();
+            if (response.ok) {
+              alert("Réponse publiée avec succès!");
+              form.reset();
+              loadFriendReplies(
+                messageId,
+                form
+                  .closest(".list-group-item")
+                  .querySelector(".friendrepliesList")
+              );
+            } else {
+              alert(
+                "Erreur lors de la publication de la réponse : " + data.message
+              );
+            }
+          } catch (error) {
+            console.error(
+              "Erreur lors de la publication de la réponse : ",
+              error
+            );
+            alert(
+              "Erreur lors de la publication de la réponse : " + error.message
+            );
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des messages : ", error);
+      alert(
+        "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
+      );
+    }
+  }
+
+  async function loadFriendReplies(messageId, repliesList) {
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token récupéré pour charger les réponses :", token);
+      if (!token) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const isValid = await isValidToken(token);
+      if (!isValid) {
+        console.warn("Token non valide");
+        alert("Token non valide. Veuillez vous reconnecter.");
+        return;
+      }
+      const response = await fetch(
+        `http://localhost:3000/api/friendMessages/${messageId}/replies`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les réponses");
+        alert(
+          "Problème pour obtenir les réponses. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+      const data = await response.json();
+      repliesList.innerHTML = "";
+      data.forEach((reply) => {
+        const replyItem = document.createElement("div");
+        replyItem.classList.add("list-group-item");
+        replyItem.innerHTML = `
+      <p>${reply.content}</p>
+      <small class="text-muted"></small>
+      `;
+        repliesList.appendChild(replyItem);
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des réponses : ", error);
+      alert(
+        "Erreur lors de la récupération des réponses. Veuillez réessayer plus tard."
+      );
+    }
+  }
+
+  loadFriendMessages();
+});
+
 // Formulaire pour publier un message sur tous les profils de l'administrateur.
 
 document.addEventListener("DOMContentLoaded", function () {

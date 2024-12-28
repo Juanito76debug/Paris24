@@ -575,6 +575,60 @@ app.post(
   }
 );
 
+// Route pour répondre à un message sur le profil de l'ami
+
+app.post(
+  "/api/friendsMessages/:messageId/replies",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { content } = req.body;
+      const message = await Message.findById(req.params.messageId);
+      if (!message) {
+        return res.status(404).json({ error: "Message non trouvé" });
+      }
+      const reply = new Message({
+        content,
+        senderId: req.user.id,
+        recipientId: message.senderId,
+      });
+      await reply.save();
+      res.json({ success: true, content: reply.content });
+    } catch (err) {
+      console.error("Erreur lors de la réponse au message :", err);
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la réponse au message",
+      });
+    }
+
+    //Route pour récupération des réponses à un message sur le profil de l'ami
+    app.get(
+      "/api/friendsMessages/:messageId/replies",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const message = await Message.findById(req.params.messageId);
+          if (!message) {
+            return res.status(404).json({ error: "Message non trouvé" });
+          }
+          const replies = await Message.find({
+            recipientId: req.user.id,
+            senderId: message.senderId,
+          });
+          res.json({ success: true, replies });
+        } catch (err) {
+          console.error("Erreur lors de la récupération des réponses :", err);
+          res.status(500).json({
+            success: false,
+            message: "Erreur lors de la récupération des réponses",
+          });
+        }
+      }
+    );
+  }
+);
+
 app.listen(port, () => {
   console.log(`Serveur démarré sur le port ${port}`);
 });

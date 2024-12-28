@@ -268,7 +268,7 @@ Bonjour</textarea
               <div id="messagesList" class="list-group"></div>
               <!--L'administrateur répond à un message sur son profil-->
               <div class="list-group-item">
-                <small class="text-muted"> </small>
+                <small class="text-muted"></small>
                 <!--réponse du message-->
                 <div class="mt-3">
                   <form class="replyForm">
@@ -520,12 +520,34 @@ Bonjour</textarea
                 Messages publiés sur le profil de l'ami
               </h5>
               <div id="friendMessagesList" class="list-group"></div>
+              <!--L'administrateur répond à un message sur le profil de l'ami-->
+              <div class="list-group-item">
+                <small class="text-muted"></small>
+                <!--réponse du message-->
+                <div class="mt-3">
+                  <form id="friendReplyForm">
+                    <div class="mb-3">
+                      <textarea
+                        class="form-control"
+                        name="message"
+                        rows="3"
+                        placeholder="Réponse à écrire ici..."
+                      >
+Merci de m'avoir inclus dans le groupe</textarea
+                      >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                      Répondre
+                    </button>
+                  </form>
+                  <div class="friendRepliesList mt-3"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
     <!--Affichage de tous les profils de l'administrateur-->
     <div class="container mt-5">
       <div class="row">
