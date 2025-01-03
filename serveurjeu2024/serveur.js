@@ -2,12 +2,10 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import cors from "cors";
 import { body, validationResult } from "express-validator";
-import authenticateToken from "./authmiddleware.js";
 
 dotenv.config();
 
@@ -76,11 +74,6 @@ const sendEmailConfirmation = async (email, subject, message) => {
   }
 };
 
-// Route pour validation du token
-app.post("/api/verifyToken", authenticateToken, (req, res) => {
-  res.json({ message: "Token valide" });
-});
-
 // Route pour récupérer le nombre de messages
 app.get("/api/messageCount", async (req, res) => {
   try {
@@ -106,21 +99,27 @@ app.get("/api/online", async (req, res) => {
 });
 
 app.get("/api/index", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(
+    path.join("C:/Users/juan_/Documents/Paris24/jeu2024", "index.html")
+  );
 });
 
 app.get("/api/register", (req, res) => {
-  res.sendFile(path.join(__dirname, "register.html"));
+  res.sendFile(
+    path.join("C:/Users/juan_/Documents/Paris24/jeu2024", "register.html")
+  );
 });
 
 app.get("/api/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "about.html"));
+  res.sendFile(
+    path.join("C:/Users/juan_/Documents/Paris24/jeu2024", "about.html")
+  );
 });
 
 // Route pour récupérer le profil de l'administrateur
-app.get("/api/profil", authenticateToken, async (req, res) => {
+app.get("/api/profil", async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne(); // Récupère le premier utilisateur trouvé
     if (!user) {
       return res.status(404).json({ error: "Administrateur non trouvé" });
     }
@@ -146,10 +145,10 @@ app.get("/api/profil", authenticateToken, async (req, res) => {
   }
 });
 
-// Route pour récupérer tous les profils des administrateurs
+// Route pour récupérer tous les profils des utilisateurs
 app.get("/api/users", async (req, res) => {
   try {
-    const profiles = await User.find({ admin: true });
+    const profiles = await User.find();
     res.json(profiles);
   } catch (err) {
     res.status(500).json({
@@ -266,10 +265,10 @@ app.post(
 );
 
 // Route pour publier un message
-app.post("/api/messages", authenticateToken, async (req, res) => {
+app.post("/api/messages", async (req, res) => {
   try {
     const { content } = req.body;
-    const message = new Message({ content, senderId: req.user.id });
+    const message = new Message({ content });
     await message.save();
     res.json({ success: true, message: "Message publié avec succès" });
   } catch (err) {
@@ -282,7 +281,7 @@ app.post("/api/messages", authenticateToken, async (req, res) => {
 });
 
 // Route pour récupérer les messages publiés
-app.get("/api/messages", authenticateToken, async (req, res) => {
+app.get("/api/messages", async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
     res.json(messages);
@@ -296,63 +295,54 @@ app.get("/api/messages", authenticateToken, async (req, res) => {
 });
 
 // Route pour publier un message sur le profil d'un ami
-app.post(
-  "/api/friendMessages/:friendId",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const { content } = req.body;
-      const friend = await User.findById(req.params.friendId);
-      if (!friend) {
-        return res.status(404).json({ error: "Ami non trouvé" });
-      }
-      const message = new Message({
-        content,
-        sender: req.user.id,
-        recipient: friend._id,
-      });
-      await message.save();
-      res.json({ success: true, content: message.content });
-    } catch (err) {
-      console.error("Erreur lors de la publication du message :", err);
-      res.status(500).json({
-        success: false,
-        message: "Erreur lors de la publication du message",
-      });
+app.post("/api/friendMessages", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const friend = await User.findById(req.params.friendId);
+    if (!friend) {
+      return res.status(404).json({ error: "Ami non trouvé" });
     }
+    const message = new Message({
+      content,
+      senderId: req.body.senderId,
+      recipientId: friend._id,
+    });
+    await message.save();
+    res.json({ success: true, content: message.content });
+  } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la publication du message",
+    });
   }
-);
+});
 
-// // Route pour récupérer les messages publiés du profil de l'ami
-
-app.get(
-  "/api/friendMessages/:friendId",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const messages = await Message.find({
-        recipient: req.params.friendId,
-      }).sort({ createdAt: -1 });
-      res.json({ success: true, messages });
-    } catch (err) {
-      console.error("Erreur lors de la récupération des messages :", err);
-      res.status(500).json({
-        success: false,
-        message: "Erreur lors de la récupération des messages",
-      });
-    }
+// Route pour récupérer les messages publiés du profil de l'ami
+app.get("/api/friendMessages", async (req, res) => {
+  try {
+    const messages = await Message.find({
+      recipientId: req.params.friendId,
+    }).sort({ createdAt: -1 });
+    res.json({ success: true, messages });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des messages :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des messages",
+    });
   }
-);
+});
 
 // Route pour publier un message sur tous les profils
-app.post("/api/postAllProfiles", authenticateToken, async (req, res) => {
+app.post("/api/postAllProfiles", async (req, res) => {
   try {
     const { content } = req.body;
     const users = await User.find();
 
     const messages = users.map((user) => ({
       content,
-      senderId: req.user.id,
+      senderId: req.body.senderId,
       recipientId: user._id,
     }));
     await Message.insertMany(messages);
@@ -368,7 +358,7 @@ app.post("/api/postAllProfiles", authenticateToken, async (req, res) => {
 });
 
 // Route pour récupérer tous les messages publiés
-app.get("/api/allProfilesMessages", authenticateToken, async (req, res) => {
+app.get("/api/allProfilesMessages", async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
     res.json({ success: true, messages });
@@ -382,11 +372,12 @@ app.get("/api/allProfilesMessages", authenticateToken, async (req, res) => {
 });
 
 // Route pour mettre à jour le profil de l'administrateur
-app.put("/api/profil", authenticateToken, async (req, res) => {
+app.put("/api/profil", async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user)
+    const user = await User.findById(req.body.id);
+    if (!user) {
       return res.status(404).json({ error: "Administrateur non trouvé" });
+    }
 
     // Mise à jour des informations utilisateur
     Object.assign(user, req.body);
@@ -403,9 +394,9 @@ app.put("/api/profil", authenticateToken, async (req, res) => {
 });
 
 // Route pour supprimer le profil de l'administrateur
-app.delete("/api/profil", authenticateToken, async (req, res) => {
+app.delete("/api/profil", async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.user.id);
+    const user = await User.findByIdAndDelete(req.body.id);
     if (!user) {
       return res.status(404).json({ error: "Administrateur non trouvé" });
     }
@@ -447,11 +438,8 @@ app.post(
           .status(401)
           .json({ error: "Pseudonyme ou mot de passe incorrect" });
       }
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
 
-      res.json({ success: true, token });
+      res.json({ success: true, message: "Connexion réussie" });
     } catch (err) {
       res
         .status(500)
@@ -461,9 +449,9 @@ app.post(
 );
 
 // Route pour la déconnexion d'un utilisateur
-app.post("/api/logout", authenticateToken, async (req, res) => {
+app.post("/api/logout", async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.body.id);
     if (!user) {
       return res.status(401).json({ error: "Utilisateur non connecté" });
     }
@@ -500,12 +488,8 @@ app.post(
       user.password = hashedPassword;
       await user.save();
 
-      const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
-      const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
       const subject = "Réinitialisation du mot de passe";
-      const message = `Cliquez ici pour réinitialiser votre mot de passe : ${resetLink}`;
+      const message = `Votre nouveau mot de passe est : ${newPassword}`;
       await sendEmailConfirmation(email, subject, message);
 
       res.json({
@@ -522,113 +506,95 @@ app.post(
 );
 
 // Route pour répondre à un message sur le profil de l'administrateur
-
-app.post(
-  "/api/messages/: messageId/replies",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const { content } = req.body;
-      const message = await Message.findById(req.params.messageId);
-      if (!message) {
-        return res.status(404).json({ error: "Message non trouvé" });
-      }
-      const reply = new Message({
-        content,
-        senderId: req.user.id,
-        recipientId: message.senderId,
-      });
-      await reply.save();
-      res.json({ success: true, content: reply.content });
-    } catch (err) {
-      console.error("Erreur lors de la réponse au message :", err);
-      res.status(500).json({
-        success: false,
-        message: "Erreur lors de la réponse au message",
-      });
+app.post("/api/messages/:messageId/replies", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const message = await Message.findById(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
     }
-
-    //Route pour récupération des réponses à un message
-    app.get(
-      "/api/messages/:messageId/replies",
-      authenticateToken,
-      async (req, res) => {
-        try {
-          const message = await Message.findById(req.params.messageId);
-          if (!message) {
-            return res.status(404).json({ error: "Message non trouvé" });
-          }
-          const replies = await Message.find({
-            recipientId: req.user.id,
-            senderId: message.senderId,
-          });
-          res.json({ success: true, replies });
-        } catch (err) {
-          console.error("Erreur lors de la récupération des réponses :", err);
-          res.status(500).json({
-            success: false,
-            message: "Erreur lors de la récupération des réponses",
-          });
-        }
-      }
-    );
+    const reply = new Message({
+      content,
+      senderId: req.body.senderId,
+      recipientId: message.senderId,
+    });
+    await reply.save();
+    res.json({ success: true, content: reply.content });
+  } catch (err) {
+    console.error("Erreur lors de la réponse au message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la réponse au message",
+    });
   }
-);
+});
+
+// Route pour récupération des réponses à un message
+app.get("/api/messages/:messageId/replies", async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
+    }
+    const replies = await Message.find({
+      recipientId: req.body.senderId,
+      senderId: message.senderId,
+    });
+    res.json({ success: true, replies });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des réponses :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des réponses",
+    });
+  }
+});
 
 // Route pour répondre à un message sur le profil de l'ami
-
-app.post(
-  "/api/friendsMessages/:messageId/replies",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const { content } = req.body;
-      const message = await Message.findById(req.params.messageId);
-      if (!message) {
-        return res.status(404).json({ error: "Message non trouvé" });
-      }
-      const reply = new Message({
-        content,
-        senderId: req.user.id,
-        recipientId: message.senderId,
-      });
-      await reply.save();
-      res.json({ success: true, content: reply.content });
-    } catch (err) {
-      console.error("Erreur lors de la réponse au message :", err);
-      res.status(500).json({
-        success: false,
-        message: "Erreur lors de la réponse au message",
-      });
+app.post("/api/friendMessages/:messageId/replies", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const message = await Message.findById(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
     }
-
-    //Route pour récupération des réponses à un message sur le profil de l'ami
-    app.get(
-      "/api/friendsMessages/:messageId/replies",
-      authenticateToken,
-      async (req, res) => {
-        try {
-          const message = await Message.findById(req.params.messageId);
-          if (!message) {
-            return res.status(404).json({ error: "Message non trouvé" });
-          }
-          const replies = await Message.find({
-            recipientId: req.user.id,
-            senderId: message.senderId,
-          });
-          res.json({ success: true, replies });
-        } catch (err) {
-          console.error("Erreur lors de la récupération des réponses :", err);
-          res.status(500).json({
-            success: false,
-            message: "Erreur lors de la récupération des réponses",
-          });
-        }
-      }
-    );
+    const reply = new Message({
+      content,
+      senderId: req.body.senderId,
+      recipientId: message.senderId,
+    });
+    await reply.save();
+    res.json({ success: true, content: reply.content });
+  } catch (err) {
+    console.error("Erreur lors de la réponse au message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la réponse au message",
+    });
   }
-);
+});
+
+// Route pour récupération des réponses à un message sur le profil de l'ami
+app.get("/api/friendMessages/:messageId/replies", async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
+    }
+    const replies = await Message.find({
+      recipientId: req.body.senderId,
+      senderId: message.senderId,
+    });
+    res.json({ success: true, replies });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des réponses :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des réponses",
+    });
+  }
+});
 
 app.listen(port, () => {
-  console.log(`Serveur démarré sur le port ${port}`);
+  console.log(`Serveur démarré sur http://localhost:${port}`);
 });
