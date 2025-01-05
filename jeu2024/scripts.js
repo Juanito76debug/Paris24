@@ -615,43 +615,46 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Formulaire pour publier un message sur le profil de l'administrateur
+  document.addEventListener("DOMContentLoaded", function () {
+    const postMessageForm = document.getElementById("postMessageForm");
+    const messagesList = document.getElementById("messagesList");
 
-  const postMessageForm = document.getElementById("postMessageForm");
-  const messagesList = document.getElementById("messagesList");
+    if (postMessageForm) {
+      postMessageForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const formData = new FormData(postMessageForm);
+        const payload = Object.fromEntries(formData.entries());
 
-  if (postMessageForm) {
-    postMessageForm.addEventListener("submit", async function (event) {
-      event.preventDefault();
-      const formData = new FormData(postMessageForm);
-      const payload = Object.fromEntries(formData.entries());
-
-      if (!payload.message.trim()) {
-        alert("Veuillez entrer un message");
-        return;
-      }
-
-      try {
-        const response = await fetch("http://localhost:3000/api/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          alert("Message publié avec succès!");
-          postMessageForm.reset();
-          loadMessages();
-        } else {
-          alert("Erreur lors de la publication du message : " + data.message);
+        if (!payload.message.trim()) {
+          alert("Veuillez entrer un message");
+          return;
         }
-      } catch (error) {
-        console.error("Erreur lors de la publication du message : ", error);
-        alert("Erreur lors de la publication du message. Veuillez réessayer.");
-      }
-    });
-  }
+
+        try {
+          const response = await fetch("http://localhost:3000/api/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            alert("Message réussie!");
+            postMessageForm.reset();
+            loadMessages();
+          } else {
+            alert("Erreur lors de la publication du message : " + data.message);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la publication du message : ", error);
+          alert(
+            "Erreur lors de la publication du message. Veuillez réessayer."
+          );
+        }
+      });
+    }
+  });
 
   async function loadMessages() {
     try {
@@ -701,6 +704,10 @@ document.addEventListener("DOMContentLoaded", function () {
           form.addEventListener("submit", async function (event) {
             event.preventDefault();
             const messageId = form.getAttribute("data-message-id");
+            if (!messageId) {
+              alert("ID de message non valide");
+              return;
+            }
             const formData = new FormData(form);
             const payload = Object.fromEntries(formData.entries());
 
@@ -723,7 +730,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
               const data = await response.json();
               if (response.ok) {
-                alert("Réponse publiée avec succès!");
+                alert("Réponse Réussie!");
                 form.reset();
                 loadReplies(
                   messageId,
@@ -808,44 +815,6 @@ document.addEventListener("DOMContentLoaded", function () {
   loadMessages();
 });
 
-// Formulaire pour publier un message sur le profil de l'ami de l'administrateur
-
-const friendPostMessageForm = document.getElementById("friendPostMessageForm");
-const friendMessagesList = document.getElementById("friendMessagesList");
-
-if (friendPostMessageForm) {
-  friendPostMessageForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const formData = new FormData(friendPostMessageForm);
-    const payload = Object.fromEntries(formData.entries());
-    if (!payload.message.trim()) {
-      alert("Veuillez entrer un message");
-      return;
-    }
-
-    try {
-      const response = await fetch("http://localhost:3000/api/friendMessages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Message publié avec succès!");
-        friendPostMessageForm.reset();
-        loadFriendMessages();
-      } else {
-        alert("Erreur lors de la publication du message : " + data.message);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la publication du message : ", error);
-      alert("Erreur lors de la publication du message : " + error.message);
-    }
-  });
-}
-
 document.addEventListener("DOMContentLoaded", function () {
   const friendPostMessageForm = document.getElementById(
     "friendPostMessageForm"
@@ -875,7 +844,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         const data = await response.json();
         if (response.ok) {
-          alert("Message publié avec succès!");
+          alert("Message réussie!");
           friendPostMessageForm.reset();
           loadFriendMessages();
         } else {
@@ -939,6 +908,10 @@ document.addEventListener("DOMContentLoaded", function () {
           form.addEventListener("submit", async function (event) {
             event.preventDefault();
             const messageId = form.getAttribute("data-message-id");
+            if (!messageId) {
+              alert("ID de message invalide");
+              return;
+            }
             const formData = new FormData(form);
             const payload = Object.fromEntries(formData.entries());
             if (!payload.reply.trim()) {
@@ -1159,7 +1132,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
               const data = await response.json();
               if (response.ok) {
-                alert("Réponse publiée avec succès!");
+                alert("Réponse Réussie!");
                 form.reset();
                 loadAllProfilesReplies(
                   messageId,

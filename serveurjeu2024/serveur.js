@@ -270,6 +270,11 @@ app.post("/api/messages", async (req, res) => {
     const { content } = req.body;
     const message = new Message({ content });
     await message.save();
+    // Mail adressé a l'administrateur dont le profil a été modifié
+    const subject = "Nouveau message publié sur le profil de l'administrateur";
+    const emailMessage = `Nouveau message déjà publié sur le profil de l'administrateur : ${content}.send`;
+    await sendEmailConfirmation(recipientEmail, subject, emailMessage);
+
     res.json({ success: true, message: "Message publié avec succès" });
   } catch (err) {
     console.error("Erreur lors de la publication du message :", err);
@@ -297,8 +302,8 @@ app.get("/api/messages", async (req, res) => {
 // Route pour publier un message sur le profil d'un ami
 app.post("/api/friendMessages", async (req, res) => {
   try {
-    const { content } = req.body;
-    const friend = await User.findById(req.params.friendId);
+    const { content, recipientEmail } = req.body;
+    const friend = await User.findById(req.body.friendId);
     if (!friend) {
       return res.status(404).json({ error: "Ami non trouvé" });
     }
@@ -308,6 +313,12 @@ app.post("/api/friendMessages", async (req, res) => {
       recipientId: friend._id,
     });
     await message.save();
+
+    // Mail adressé a l'ami dont le profil a été modifié
+    const subject = "Nouveau message publié sur le profil de l'ami";
+    const emailMessage = `Nouveau message déjà publié sur le profil de l'ami : ${content}`;
+    await sendEmailConfirmation(recipientEmail, subject, emailMessage);
+    
     res.json({ success: true, content: message.content });
   } catch (err) {
     console.error("Erreur lors de la publication du message :", err);
@@ -509,6 +520,11 @@ app.post(
 app.post("/api/messages/:messageId/replies", async (req, res) => {
   try {
     const { content } = req.body;
+    const messageId = req.params.messageId;
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({ error: "ID de message non valide" });
+    }
     const message = await Message.findById(req.params.messageId);
     if (!message) {
       return res.status(404).json({ error: "Message non trouvé" });

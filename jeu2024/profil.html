@@ -250,6 +250,12 @@ Passionné par les jeux olympiques</textarea
 Bonjour</textarea
                   >
                 </div>
+                <!--Mail adressé à l'administrateur dont le profil a été modifié-->
+                <input
+                  type="hidden"
+                  name="recipientEmail"
+                  value="juangimenez@gmail.com"
+                />
                 <button type="submit" class="btn btn-primary">Publier</button>
               </form>
             </div>
@@ -498,10 +504,17 @@ Bonjour</textarea
                     id="friendPostMessage"
                     name="message"
                     rows="3"
+                    placeholder="message a écrire ici..."
                   >
 Bonjour</textarea
                   >
                 </div>
+                <!--Mail adressé à l'ami dont le profil a été adressé-->
+                <input
+                  type="hidden"
+                  name="recipientEmail"
+                  value="email_du_membre@gmail.com"
+                />
                 <button type="submit" class="btn btn-primary">Publier</button>
               </form>
             </div>
