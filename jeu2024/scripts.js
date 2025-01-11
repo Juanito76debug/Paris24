@@ -416,7 +416,6 @@ window.onload = function () {
 
   // Fonction pour supprimer le profil de l'ami de l'administrateur
   window.onload = function () {
-    // Fonction pour supprimer le profil de l'ami de l'administrateur
     window.deleteFriendProfile = async function (userId) {
       try {
         const response = await fetch(
@@ -691,6 +690,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   <button class="btn btn-primary btn-sm">Répondre</button>
                 </form>
                 <div class="repliesList mt-3"></div>
+                <button class="btn btn danger btn-sm-mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
               </div>
             `;
           messagesList.appendChild(messageItem);
@@ -703,6 +703,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".replyForm").forEach((form) => {
           form.addEventListener("submit", async function (event) {
             event.preventDefault();
+            const form = event.target;
             const messageId = form.getAttribute("data-message-id");
             if (!messageId) {
               alert("ID de message non valide");
@@ -767,6 +768,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Gestionnaire d'événements pour supprimer le message sur le profil de l'administrateur
+  document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
+    button.addEventListener("click", async function () {
+      const messageId = this.getAttribute("data-messageId");
+      if (confirm("Êtes-vous certain de supprimer ce message?")) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/messages/${messageId}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const data = await response.json();
+          if (response.ok) {
+            alert("Suppression du message réussie!");
+            loadMessages();
+          } else {
+            alert("Erreur lors de la suppression du message: " + data.message);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la suppression du message : ", error);
+          alert("Erreur lors de la suppression du message : " + error.message);
+        }
+      }
+    });
+  });
+
   async function loadReplies(messageId, repliesList) {
     try {
       const response = await fetch(
@@ -814,6 +846,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadMessages();
 });
+
+// Formulaire pour publier un message sur le profil de l'ami
 
 document.addEventListener("DOMContentLoaded", function () {
   const friendPostMessageForm = document.getElementById(
@@ -875,7 +909,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const data = await response.json();
-      friendMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      friendMessagesList.innerHTML = "";
 
       if (Array.isArray(data)) {
         data.forEach((message) => {
@@ -892,6 +926,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <button class="btn btn-primary btn-sm">Répondre</button>
               </form>
               <div class="friendRepliesList mt-3"></div>
+              <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
             </div>
           `;
           friendMessagesList.appendChild(messageItem);
@@ -907,11 +942,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".friendReplyForm").forEach((form) => {
           form.addEventListener("submit", async function (event) {
             event.preventDefault();
+            const form = event.target;
             const messageId = form.getAttribute("data-message-id");
-            if (!messageId) {
-              alert("ID de message invalide");
-              return;
-            }
             const formData = new FormData(form);
             const payload = Object.fromEntries(formData.entries());
             if (!payload.reply.trim()) {
@@ -933,7 +965,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
               const data = await response.json();
               if (response.ok) {
-                alert("Réponse publiée avec succès!");
+                alert("Réponse Réussie!");
                 form.reset();
                 loadFriendReplies(
                   messageId,
@@ -958,6 +990,171 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           });
         });
+
+        // Gestionnaire d'événements pour supprimer le message sur le profil de l'ami
+        document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
+          button.addEventListener("click", async function () {
+            const messageId = this.getAttribute("data-message-id");
+            if (confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) {
+              try {
+                const response = await fetch(
+                  `http://localhost:3000/api/friendMessages/${messageId}`,
+                  {
+                    method: "DELETE",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  }
+                );
+
+                const data = await response.json();
+                if (response.ok) {
+                  alert("Suppression du message réussie!");
+                  loadFriendMessages();
+                } else {
+                  alert(
+                    "Erreur lors de la suppression du message : " + data.message
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  "Erreur lors de la suppression du message : ",
+                  error
+                );
+                alert(
+                  "Erreur lors de la suppression du message : " + error.message
+                );
+              }
+            }
+          });
+        });
+      } else if (
+        data &&
+        typeof data === "object" &&
+        Array.isArray(data.messages)
+      ) {
+        // Traiter les données comme un objet avec une propriété messages
+        data.messages.forEach((message) => {
+          const messageItem = document.createElement("div");
+          messageItem.classList.add("list-group-item");
+          messageItem.innerHTML = `
+            <p>${message.content}</p>
+            <small class="text-muted"></small>
+            <div class="mt-3">
+              <form class="friendReplyForm" data-message-id="${message._id}">
+                <div class="mb-3">
+                  <textarea class="form-control" name="reply" rows="3" placeholder="Répondre..."></textarea>
+                </div>
+                <button class="btn btn-primary btn-sm">Répondre</button>
+              </form>
+              <div class="friendRepliesList mt-3"></div>
+              <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
+            </div>
+          `;
+          friendMessagesList.appendChild(messageItem);
+
+          // Chargement des réponses pour ce message
+          loadFriendReplies(
+            message._id,
+            messageItem.querySelector(".friendRepliesList")
+          );
+        });
+
+        // Gestionnaire d'événements pour les formulaires de réponse sur le profil de l'ami
+        document.querySelectorAll(".friendReplyForm").forEach((form) => {
+          form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const form = event.target;
+            const messageId = form.getAttribute("data-message-id");
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+            if (!payload.reply.trim()) {
+              alert("Veuillez répondre au message");
+              return;
+            }
+
+            try {
+              const response = await fetch(
+                `http://localhost:3000/api/friendMessages/${messageId}/replies`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ content: payload.reply }),
+                }
+              );
+
+              const data = await response.json();
+              if (response.ok) {
+                alert("Réponse Réussie!");
+                form.reset();
+                loadFriendReplies(
+                  messageId,
+                  form
+                    .closest(".list-group-item")
+                    .querySelector(".friendRepliesList")
+                );
+              } else {
+                alert(
+                  "Erreur lors de la publication de la réponse : " +
+                    data.message
+                );
+              }
+            } catch (error) {
+              console.error(
+                "Erreur lors de la publication de la réponse : ",
+                error
+              );
+              alert(
+                "Erreur lors de la publication de la réponse : " + error.message
+              );
+            }
+          });
+        });
+
+        // Gestionnaire d'événements pour supprimer le message sur le profil de l'ami
+        document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
+          button.addEventListener("click", async function () {
+            const messageId = this.getAttribute("data-message-id");
+            if (confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) {
+              try {
+                const response = await fetch(
+                  `http://localhost:3000/api/friendMessages/${messageId}`,
+                  {
+                    method: "DELETE",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  }
+                );
+
+                const data = await response.json();
+                if (response.ok) {
+                  alert("Suppression du message réussie!");
+                  loadFriendMessages();
+                } else {
+                  alert(
+                    "Erreur lors de la suppression du message : " + data.message
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  "Erreur lors de la suppression du message : ",
+                  error
+                );
+                alert(
+                  "Erreur lors de la suppression du message : " + error.message
+                );
+              }
+            }
+          });
+        });
+      } else {
+        console.error("Les données ne sont pas un tableau :", data);
+        alert(
+          "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
+        );
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des messages : ", error);
@@ -1078,7 +1275,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const data = await response.json();
-      allProfilesMessagesList.innerHTML = ""; // Vider la liste des messages avant de remplir la liste avec les nouveaux messages
+      allProfilesMessagesList.innerHTML = "";
 
       if (Array.isArray(data)) {
         data.forEach((message) => {
@@ -1095,6 +1292,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <button class="btn btn-primary btn-sm">Répondre</button>
               </form>
               <div class="repliesAllProfilesList mt-3"></div>
+              <button class="btn btn danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
             </div>
           `;
           allProfilesMessagesList.appendChild(messageItem);
@@ -1165,6 +1363,43 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   }
+
+  // Gestionnaire d'evenements pour supprimer le message sur tous les profils
+  document
+    .querySelectorAll(".deleteAllProfilesMessageBtn")
+    .forEach((button) => {
+      button.addEventListener("click", async function () {
+        const messageId = this.getAttribute("data-message-id");
+        if (confirm("Êtes-vous certain de vouloir supprimer ce message ?")) {
+          try {
+            const response = await fetch(
+              `http://localhost:3000/api/allProfilesMessages/${messageId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            const data = await response.json();
+            if (response.ok) {
+              alert("Suppression du message réussie!");
+              loadAllProfilesMessages();
+            } else {
+              alert(
+                "Erreur lors de la suppression du message : " + data.message
+              );
+            }
+          } catch (error) {
+            console.error("Erreur lors de la suppression du message : ", error);
+            alert(
+              "Erreur lors de la suppression du message : " + error.message
+            );
+          }
+        }
+      });
+    });
 
   async function loadAllProfilesReplies(messageId, repliesList) {
     try {
