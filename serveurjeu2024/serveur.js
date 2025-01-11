@@ -318,7 +318,7 @@ app.post("/api/friendMessages", async (req, res) => {
     const subject = "Nouveau message publié sur le profil de l'ami";
     const emailMessage = `Nouveau message déjà publié sur le profil de l'ami : ${content}`;
     await sendEmailConfirmation(recipientEmail, subject, emailMessage);
-    
+
     res.json({ success: true, content: message.content });
   } catch (err) {
     console.error("Erreur lors de la publication du message :", err);
@@ -357,6 +357,11 @@ app.post("/api/postAllProfiles", async (req, res) => {
       recipientId: user._id,
     }));
     await Message.insertMany(messages);
+
+    // Mail adressé aux membres dont les profil ont été modifié
+    const subject = "Nouveau message publié sur tous les profils";
+    const emailMessage = `Nouveau message déjà publié sur tous les profils : ${content}`;
+    await sendEmailConfirmation(recipientEmail, subject, emailMessage);
 
     res.json({ success: true, message: "Message publié sur tous les profils" });
   } catch (err) {
@@ -566,6 +571,24 @@ app.get("/api/messages/:messageId/replies", async (req, res) => {
   }
 });
 
+// Route pour supprimer un message sur le profil de l'administrateur
+
+app.delete("/api/messages/:messageId", async (req, res) => {
+  try {
+    const message = await Message.findByIdAndDelete(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
+    }
+    res.json({ success: true, message: "Message supprimé" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression du message",
+    });
+  }
+});
+
 // Route pour répondre à un message sur le profil de l'ami
 app.post("/api/friendMessages/:messageId/replies", async (req, res) => {
   try {
@@ -607,6 +630,42 @@ app.get("/api/friendMessages/:messageId/replies", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la récupération des réponses",
+    });
+  }
+});
+
+// Route pour supprimer un message sur le profil de l'ami
+
+app.delete("/api/friendMessages/:messageId", async (req, res) => {
+  try {
+    const message = await Message.findByIdAndDelete(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
+    }
+    res.json({ success: true, message: "Message supprimé avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression du message",
+    });
+  }
+});
+
+// Route pour supprimer un message sur tous les profils
+
+app.delete("/api/allProfilesMessages/:messageId", async (req, res) => {
+  try {
+    const message = await Message.findByIdAndDelete(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message non trouvé" });
+    }
+    res.json({ success: true, message: "Message supprimé avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression du message",
     });
   }
 });
