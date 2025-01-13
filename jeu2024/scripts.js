@@ -235,36 +235,38 @@ window.onload = function () {
   }
 
   // Gestionnaire d'événement pour modifier le profil de l'administrateur
-  document.addEventListener("DOMContentLoaded", loadAdminProfile);
-  document
-    .getElementById("adminProfileForm")
-    .addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const formData = new FormData(event.target);
-      const payload = Object.fromEntries(formData.entries());
-      payload.Age = 48; // Modification de l'âge
-      payload.Phone = "0123456789"; // Modification du téléphone
-      payload.preferences = "adore le foot"; // Modification de la préférence
-      try {
-        const response = await fetch("http://localhost:3000/api/profil", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          alert("Profil mis à jour réussi");
-          loadAdminProfile();
-        } else {
-          alert("Erreur lors de la mise à jour du profil : " + data.message);
+  document.addEventListener("DOMContentLoaded", function () {
+    const adminProfileForm = document.getElementById("adminProfileForm");
+    if (adminProfileForm) {
+      adminProfileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const payload = Object.fromEntries(formData.entries());
+        payload.Age = 48; // Modification de l'âge
+        payload.Phone = "0123456789"; // Modification du téléphone
+        payload.preferences = "adore le foot"; // Modification de la préférence
+        try {
+          const response = await fetch("http://localhost:3000/api/profil", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            alert("Profil mis à jour réussi");
+            loadAdminProfile();
+          } else {
+            alert("Erreur lors de la mise à jour du profil : " + data.message);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour du profil :", error);
+          alert("Erreur lors de la mise à jour du profil : " + error.message);
         }
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour du profil :", error);
-        alert("Erreur lors de la mise à jour du profil : " + error.message);
-      }
-    });
+      });
+    }
+  });
 
   // Fonction pour charger les utilisateurs
 
@@ -304,6 +306,98 @@ window.onload = function () {
       );
     }
   }
+
+  //Fonction pour chargement et affichage de la liste d'amis de l'administrateur
+  document.addEventListener("DOMContentLoaded", function () {
+    const friendsList = document.getElementById("friendsList");
+
+    async function loadFriends() {
+      try {
+        const response = await fetch("http://localhost:3000/api/friends", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          console.warn("Problème pour obtenir la liste des amis");
+          alert(
+            "Problème pour obtenir la liste d'amis. Veuillez réessayer plus tard "
+          );
+          return;
+        }
+        const data = await response.json();
+        friendsList.innerHTML = "";
+
+        if (Array.isArray(data.friends)) {
+          data.friends.forEach((friend) => {
+            const friendItem = document.createElement("div");
+            friendItem.classList.add("col-md-4");
+            friendItem.innerHTML = `
+            <div class="card mb-4">
+              <img class="card-img-top" alt="Photo de profil" src="${friend.username}">
+              <div class="card-body">
+              <h5 class="card-title">${friend.username}</h5>
+              <p class="card-text">${friend.fullName}</p>
+              <button class="btn btn-danger btn-sm deleteFriendBtn" data-friend-id="${friend._id}">Supprimer</button>
+              </div>
+              </div>
+              `;
+            friendsList.appendChild(friendItem);
+
+            // Gestionnaire d'événements pour les boutons de suppression de la liste d'amis de l'administrateur
+            friendItem
+              .querySelector(".deleteFriendBtn")
+              .addEventListener("click", async function () {
+                const friendId = this.getAttribute("data-friend-id");
+                if (confirm("Etes vous certain de supprimer cet ami?")) {
+                  try {
+                    const response = await fetch(
+                      `http://localhost:3000/api/friends/${friendId}`,
+                      {
+                        method: "DELETE",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
+                    const data = await response.json();
+                    if (response.ok) {
+                      alert("Ami supprimé avec succès");
+                      loadFriends();
+                    } else {
+                      alert(
+                        "Erreur lors de la suppression de l'ami : " +
+                          data.message
+                      );
+                    }
+                  } catch (error) {
+                    console.error(
+                      "Erreur lors de la suppression de l'ami : ",
+                      error
+                    );
+                    alert(
+                      "Erreur lors de la suppression de l'ami. Veuillez réessayer plus tard."
+                    );
+                  }
+                }
+              });
+          });
+        } else {
+          console.error("Les données reçues ne sont pas un tableau");
+          alert(
+            "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
+          );
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des amis : ", error);
+        alert(
+          "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
+        );
+      }
+    }
+    loadFriends();
+  });
 
   // Fonction pour voir le profil d'un ami de l'administrateur
   window.viewFriendProfile = async function (userId) {
@@ -444,6 +538,60 @@ window.onload = function () {
         );
       }
     };
+
+    // fonction pour chargement et affichage de la liste d'amis sur le profil de l'ami.
+    document.addEventListener("DOMContentLoaded", function () {
+      const friendFriendsList = document.getElementById("friendFriendsList");
+
+      async function loadFriendFriends(friendId) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/users/friends/${friendId}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (!response.ok) {
+            console.warn("Problème pour obtenir la liste des amis");
+            alert(
+              "Problème pour obtenir la liste des amis. Veuillez réessayer plus tard."
+            );
+            return;
+          }
+          const data = await response.json();
+          friendFriendsList.innerHTML = "";
+          if (Array.isArray(data.friends)) {
+            data.friends.forEach((friend) => {
+              const friendItem = document.createElement("div");
+              friendItem.classList.add = "col-md-4";
+              friendItem.innerHTML = `
+            <div class="card mb-4">
+            <img class="card-img-top" alt="Photo de profil" src="${friend.username}">
+              <h5 class="card-title">${friend.username}</h5>
+              <p class="card-text">${friend.fullName}</p>
+              </div>
+              </div>
+              `;
+              friendFriendsList.appendChild(friendItem);
+            });
+          } else {
+            console.error("Les données reçues ne sont pas un tableau");
+            alert(
+              "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
+            );
+          }
+        } catch (error) {
+          console.error("Erreur lors de la récupération des amis : ", error);
+          alert(
+            "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
+          );
+        }
+      }
+      loadFriendFriends();
+    });
 
     // Gestionnaire d'événements pour le bouton de modification de profil de l'administrateur
     const editProfileButton = document.getElementById("editProfileButton");
@@ -614,46 +762,44 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Formulaire pour publier un message sur le profil de l'administrateur
-  document.addEventListener("DOMContentLoaded", function () {
-    const postMessageForm = document.getElementById("postMessageForm");
-    const messagesList = document.getElementById("messagesList");
+  const postMessageForm = document.getElementById("postMessageForm");
+  const messagesList = document.getElementById("messagesList");
 
-    if (postMessageForm) {
-      postMessageForm.addEventListener("submit", async function (event) {
-        event.preventDefault();
-        const formData = new FormData(postMessageForm);
-        const payload = Object.fromEntries(formData.entries());
+  if (postMessageForm) {
+    postMessageForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const formData = new FormData(postMessageForm);
+      const payload = Object.fromEntries(formData.entries());
 
-        if (!payload.message.trim()) {
-          alert("Veuillez entrer un message");
-          return;
+      if (!payload.message.trim()) {
+        alert("Veuillez entrer un message");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:3000/api/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert("Message réussie!");
+          postMessageForm.reset();
+          loadMessages();
+        } else {
+          alert("Erreur lors de la publication du message : " + data.message);
         }
-
-        try {
-          const response = await fetch("http://localhost:3000/api/messages", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-          const data = await response.json();
-          if (response.ok) {
-            alert("Message réussie!");
-            postMessageForm.reset();
-            loadMessages();
-          } else {
-            alert("Erreur lors de la publication du message : " + data.message);
-          }
-        } catch (error) {
-          console.error("Erreur lors de la publication du message : ", error);
-          alert(
-            "Erreur lors de la publication du message. Veuillez réessayer."
-          );
-        }
-      });
-    }
-  });
+      } catch (error) {
+        console.error("Erreur lors de la publication du message : ", error);
+        alert(
+          "Erreur lors de la publication du message. Veuillez réessayer plus tard."
+        );
+      }
+    });
+  }
 
   async function loadMessages() {
     try {
@@ -673,13 +819,14 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const data = await response.json();
-      messagesList.innerHTML = "";
+      if (messagesList) {
+        messagesList.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((message) => {
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("list-group-item");
-          messageItem.innerHTML = `
+        if (Array.isArray(data)) {
+          data.forEach((message) => {
+            const messageItem = document.createElement("div");
+            messageItem.classList.add("list-group-item");
+            messageItem.innerHTML = `
               <p>${message.content}</p>
               <small class="text-muted"></small>
               <div class="mt-3">
@@ -690,75 +837,79 @@ document.addEventListener("DOMContentLoaded", function () {
                   <button class="btn btn-primary btn-sm">Répondre</button>
                 </form>
                 <div class="repliesList mt-3"></div>
-                <button class="btn btn danger btn-sm-mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
+                <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
               </div>
             `;
-          messagesList.appendChild(messageItem);
+            messagesList.appendChild(messageItem);
 
-          // Chargement des réponses pour ce message
-          loadReplies(message._id, messageItem.querySelector(".repliesList"));
-        });
+            // Chargement des réponses pour ce message
+            loadReplies(message._id, messageItem.querySelector(".repliesList"));
+          });
 
-        // Gestionnaire d'événements pour les formulaires de réponse sur le profil de l'administrateur
-        document.querySelectorAll(".replyForm").forEach((form) => {
-          form.addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const form = event.target;
-            const messageId = form.getAttribute("data-message-id");
-            if (!messageId) {
-              alert("ID de message non valide");
-              return;
-            }
-            const formData = new FormData(form);
-            const payload = Object.fromEntries(formData.entries());
+          // Gestionnaire d'événements pour les formulaires de réponse sur le profil de l'administrateur
+          document.querySelectorAll(".replyForm").forEach((form) => {
+            form.addEventListener("submit", async function (event) {
+              event.preventDefault();
+              const form = event.target;
+              const messageId = form.getAttribute("data-message-id");
+              if (!messageId) {
+                alert("ID de message non valide");
+                return;
+              }
+              const formData = new FormData(form);
+              const payload = Object.fromEntries(formData.entries());
 
-            if (!payload.reply.trim()) {
-              alert("Veuillez répondre au message");
-              return;
-            }
+              if (!payload.reply.trim()) {
+                alert("Veuillez répondre au message");
+                return;
+              }
 
-            try {
-              const response = await fetch(
-                `http://localhost:3000/api/messages/${messageId}/replies`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ content: payload.reply }),
-                }
-              );
-
-              const data = await response.json();
-              if (response.ok) {
-                alert("Réponse Réussie!");
-                form.reset();
-                loadReplies(
-                  messageId,
-                  form.closest(".list-group-item").querySelector(".repliesList")
+              try {
+                const response = await fetch(
+                  `http://localhost:3000/api/messages/${messageId}/replies`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ content: payload.reply }),
+                  }
                 );
-              } else {
+
+                const data = await response.json();
+                if (response.ok) {
+                  alert("Réponse Réussie!");
+                  form.reset();
+                  loadReplies(
+                    messageId,
+                    form
+                      .closest(".list-group-item")
+                      .querySelector(".repliesList")
+                  );
+                } else {
+                  alert(
+                    "Erreur lors de la publication de la réponse : " +
+                      data.message
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  "Erreur lors de la publication de la réponse : ",
+                  error
+                );
                 alert(
                   "Erreur lors de la publication de la réponse : " +
-                    data.message
+                    error.message
                 );
               }
-            } catch (error) {
-              console.error(
-                "Erreur lors de la publication de la réponse : ",
-                error
-              );
-              alert(
-                "Erreur lors de la publication de la réponse : " + error.message
-              );
-            }
+            });
           });
-        });
-      } else {
-        console.error("Les données reçues ne sont pas un tableau :", data);
-        alert(
-          "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
-        );
+        } else {
+          console.error("Les données reçues ne sont pas un tableau :", data);
+          alert(
+            "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
+          );
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des messages : ", error);
@@ -771,7 +922,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Gestionnaire d'événements pour supprimer le message sur le profil de l'administrateur
   document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
     button.addEventListener("click", async function () {
-      const messageId = this.getAttribute("data-messageId");
+      const messageId = this.getAttribute("data-message-id");
       if (confirm("Êtes-vous certain de supprimer ce message?")) {
         try {
           const response = await fetch(
@@ -825,9 +976,9 @@ document.addEventListener("DOMContentLoaded", function () {
           const replyItem = document.createElement("div");
           replyItem.classList.add("list-group-item");
           replyItem.innerHTML = `
-              <p>${reply.content}</p>
-              <small class="text-muted"></small>
-            `;
+            <p>${reply.content}</p>
+            <small class="text-muted"></small>
+          `;
           repliesList.appendChild(replyItem);
         });
       } else {
@@ -846,8 +997,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadMessages();
 });
-
-// Formulaire pour publier un message sur le profil de l'ami
 
 document.addEventListener("DOMContentLoaded", function () {
   const friendPostMessageForm = document.getElementById(
@@ -909,252 +1058,130 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const data = await response.json();
-      friendMessagesList.innerHTML = "";
+      if (friendMessagesList) {
+        friendMessagesList.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((message) => {
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("list-group-item");
-          messageItem.innerHTML = `
-            <p>${message.content}</p>
-            <small class="text-muted"></small>
-            <div class="mt-3">
-              <form class="friendReplyForm" data-message-id="${message._id}">
-                <div class="mb-3">
-                  <textarea class="form-control" name="reply" rows="3" placeholder="Répondre..."></textarea>
-                </div>
-                <button class="btn btn-primary btn-sm">Répondre</button>
-              </form>
-              <div class="friendRepliesList mt-3"></div>
-              <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
-            </div>
-          `;
-          friendMessagesList.appendChild(messageItem);
+        if (Array.isArray(data)) {
+          data.forEach((message) => {
+            const messageItem = document.createElement("div");
+            messageItem.classList.add("list-group-item");
+            messageItem.innerHTML = `
+              <p>${message.content}</p>
+              <small class="text-muted"></small>
+              <div class="mt-3">
+                <form class="friendReplyForm" data-message-id="${message._id}">
+                  <div class="mb-3">
+                    <textarea class="form-control" name="reply" rows="3" placeholder="Répondre..."></textarea>
+                  </div>
+                  <button class="btn btn-primary btn-sm">Répondre</button>
+                </form>
+                <div class="friendRepliesList mt-3"></div>
+                <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
+              </div>
+            `;
+            friendMessagesList.appendChild(messageItem);
 
-          // Chargement des réponses pour ce message
-          loadFriendReplies(
-            message._id,
-            messageItem.querySelector(".friendRepliesList")
-          );
-        });
-
-        // Gestionnaire d'événements pour les formulaires de réponse sur le profil de l'ami
-        document.querySelectorAll(".friendReplyForm").forEach((form) => {
-          form.addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const form = event.target;
-            const messageId = form.getAttribute("data-message-id");
-            const formData = new FormData(form);
-            const payload = Object.fromEntries(formData.entries());
-            if (!payload.reply.trim()) {
-              alert("Veuillez répondre au message");
-              return;
-            }
-
-            try {
-              const response = await fetch(
-                `http://localhost:3000/api/friendMessages/${messageId}/replies`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ content: payload.reply }),
-                }
-              );
-
-              const data = await response.json();
-              if (response.ok) {
-                alert("Réponse Réussie!");
-                form.reset();
-                loadFriendReplies(
-                  messageId,
-                  form
-                    .closest(".list-group-item")
-                    .querySelector(".friendRepliesList")
-                );
-              } else {
-                alert(
-                  "Erreur lors de la publication de la réponse : " +
-                    data.message
-                );
-              }
-            } catch (error) {
-              console.error(
-                "Erreur lors de la publication de la réponse : ",
-                error
-              );
-              alert(
-                "Erreur lors de la publication de la réponse : " + error.message
-              );
-            }
+            // Chargement des réponses pour ce message
+            loadFriendReplies(
+              message._id,
+              messageItem.querySelector(".friendRepliesList")
+            );
           });
-        });
 
-        // Gestionnaire d'événements pour supprimer le message sur le profil de l'ami
-        document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
-          button.addEventListener("click", async function () {
-            const messageId = this.getAttribute("data-message-id");
-            if (confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) {
+          // Gestionnaire d'événements pour les formulaires de réponse sur le profil de l'ami
+          document.querySelectorAll(".friendReplyForm").forEach((form) => {
+            form.addEventListener("submit", async function (event) {
+              event.preventDefault();
+              const form = event.target;
+              const messageId = form.getAttribute("data-message-id");
+              const formData = new FormData(form);
+              const payload = Object.fromEntries(formData.entries());
+              if (!payload.reply.trim()) {
+                alert("Veuillez répondre au message");
+                return;
+              }
+
               try {
                 const response = await fetch(
-                  `http://localhost:3000/api/friendMessages/${messageId}`,
+                  `http://localhost:3000/api/friendMessages/${messageId}/replies`,
                   {
-                    method: "DELETE",
+                    method: "POST",
                     headers: {
                       "Content-Type": "application/json",
                     },
+                    body: JSON.stringify({ content: payload.reply }),
                   }
                 );
 
                 const data = await response.json();
                 if (response.ok) {
-                  alert("Suppression du message réussie!");
-                  loadFriendMessages();
+                  alert("Réponse Réussie!");
+                  form.reset();
+                  loadFriendReplies(
+                    messageId,
+                    form
+                      .closest(".list-group-item")
+                      .querySelector(".friendRepliesList")
+                  );
                 } else {
                   alert(
-                    "Erreur lors de la suppression du message : " + data.message
+                    "Erreur lors de la publication de la réponse : " +
+                      data.message
                   );
                 }
               } catch (error) {
                 console.error(
-                  "Erreur lors de la suppression du message : ",
+                  "Erreur lors de la publication de la réponse : ",
                   error
                 );
-                alert(
-                  "Erreur lors de la suppression du message : " + error.message
-                );
-              }
-            }
-          });
-        });
-      } else if (
-        data &&
-        typeof data === "object" &&
-        Array.isArray(data.messages)
-      ) {
-        // Traiter les données comme un objet avec une propriété messages
-        data.messages.forEach((message) => {
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("list-group-item");
-          messageItem.innerHTML = `
-            <p>${message.content}</p>
-            <small class="text-muted"></small>
-            <div class="mt-3">
-              <form class="friendReplyForm" data-message-id="${message._id}">
-                <div class="mb-3">
-                  <textarea class="form-control" name="reply" rows="3" placeholder="Répondre..."></textarea>
-                </div>
-                <button class="btn btn-primary btn-sm">Répondre</button>
-              </form>
-              <div class="friendRepliesList mt-3"></div>
-              <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
-            </div>
-          `;
-          friendMessagesList.appendChild(messageItem);
-
-          // Chargement des réponses pour ce message
-          loadFriendReplies(
-            message._id,
-            messageItem.querySelector(".friendRepliesList")
-          );
-        });
-
-        // Gestionnaire d'événements pour les formulaires de réponse sur le profil de l'ami
-        document.querySelectorAll(".friendReplyForm").forEach((form) => {
-          form.addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const form = event.target;
-            const messageId = form.getAttribute("data-message-id");
-            const formData = new FormData(form);
-            const payload = Object.fromEntries(formData.entries());
-            if (!payload.reply.trim()) {
-              alert("Veuillez répondre au message");
-              return;
-            }
-
-            try {
-              const response = await fetch(
-                `http://localhost:3000/api/friendMessages/${messageId}/replies`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ content: payload.reply }),
-                }
-              );
-
-              const data = await response.json();
-              if (response.ok) {
-                alert("Réponse Réussie!");
-                form.reset();
-                loadFriendReplies(
-                  messageId,
-                  form
-                    .closest(".list-group-item")
-                    .querySelector(".friendRepliesList")
-                );
-              } else {
                 alert(
                   "Erreur lors de la publication de la réponse : " +
-                    data.message
+                    error.message
                 );
               }
-            } catch (error) {
-              console.error(
-                "Erreur lors de la publication de la réponse : ",
-                error
-              );
-              alert(
-                "Erreur lors de la publication de la réponse : " + error.message
-              );
-            }
+            });
           });
-        });
 
-        // Gestionnaire d'événements pour supprimer le message sur le profil de l'ami
-        document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
-          button.addEventListener("click", async function () {
-            const messageId = this.getAttribute("data-message-id");
-            if (confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) {
-              try {
-                const response = await fetch(
-                  `http://localhost:3000/api/friendMessages/${messageId}`,
-                  {
-                    method: "DELETE",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
+          // Gestionnaire d'événements pour supprimer le message sur le profil de l'ami
+          document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
+            button.addEventListener("click", async function () {
+              const messageId = this.getAttribute("data-message-id");
+              if (confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) {
+                try {
+                  const response = await fetch(
+                    `http://localhost:3000/api/friendMessages/${messageId}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    }
+                  );
+
+                  const data = await response.json();
+                  if (response.ok) {
+                    alert("Suppression du message réussie!");
+                    loadFriendMessages();
+                  } else {
+                    alert(
+                      "Erreur lors de la suppression du message : " +
+                        data.message
+                    );
                   }
-                );
-
-                const data = await response.json();
-                if (response.ok) {
-                  alert("Suppression du message réussie!");
-                  loadFriendMessages();
-                } else {
+                } catch (error) {
+                  console.error(
+                    "Erreur lors de la suppression du message : ",
+                    error
+                  );
                   alert(
-                    "Erreur lors de la suppression du message : " + data.message
+                    "Erreur lors de la suppression du message : " +
+                      error.message
                   );
                 }
-              } catch (error) {
-                console.error(
-                  "Erreur lors de la suppression du message : ",
-                  error
-                );
-                alert(
-                  "Erreur lors de la suppression du message : " + error.message
-                );
               }
-            }
+            });
           });
-        });
-      } else {
-        console.error("Les données ne sont pas un tableau :", data);
-        alert(
-          "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
-        );
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des messages : ", error);
@@ -1211,6 +1238,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadFriendMessages();
 });
+
+// Formulaire pour publier un message sur tous les profils
 
 document.addEventListener("DOMContentLoaded", function () {
   const postAllProfilesForm = document.getElementById("postAllProfilesForm");
@@ -1447,4 +1476,107 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   loadAllProfilesMessages();
+});
+
+// Fonction pour chargement et affichage de la liste d'amis de tous les profils.
+document.addEventListener("DOMContentLoaded", function () {
+  const allUserFriendsList = document.getElementById("allUserFriendsList");
+
+  async function loadAllUserFriends() {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/allUsersFriends",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les amis");
+        alert("Problème pour obtenir les amis. Veuillez réessayer plus tard.");
+        return;
+      }
+      const data = await response.json();
+
+      // Vérification si l'élément existe avant modification de son innerHTML
+      if (allUserFriendsList) {
+        allUserFriendsList.innerHTML = "";
+
+        if (Array.isArray(data)) {
+          data.forEach((friend) => {
+            const friendItem = document.createElement("div");
+            friendItem.classList.add("col-md-4");
+            friendItem.innerHTML = `
+              <div class="card mb-4">
+                <img class="card-img-top" alt="Photo de profil" src="${friend.username}">
+                <h5 class="card-title">${friend.username}</h5>
+                <p class="card-text">${friend.fullName}</p>
+                <button class="btn btn-danger btn-sm deleteAllUsersFriendbtn" data-friend-id="${friend.id}">Supprimer</button>
+              </div>
+            `;
+            allUserFriendsList.appendChild(friendItem);
+          });
+
+          // Gestionnaire d'événements pour les boutons de suppressions de la liste d'amis dans tous les profils
+          document
+            .querySelectorAll(".deleteAllUsersFriendbtn")
+            .forEach((button) => {
+              button.addEventListener("click", async function () {
+                const friendId = this.getAttribute("data-friend-id");
+                if (
+                  confirm(
+                    "Etes-vous certain de vouloir supprimer cet ami de tous les profils?"
+                  )
+                ) {
+                  try {
+                    const response = await fetch(
+                      `http://localhost:3000/api/allUsersFriends/${friendId}`,
+                      {
+                        method: "DELETE",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
+                    const data = await response.json();
+                    if (response.ok) {
+                      alert("Suppression de l'ami réussie!");
+                      loadAllUserFriends();
+                    } else {
+                      alert(
+                        "Erreur lors de la suppression de l'ami : " +
+                          data.message
+                      );
+                    }
+                  } catch (error) {
+                    console.error(
+                      "Erreur lors de la suppression de l'ami : ",
+                      error
+                    );
+                    alert(
+                      "Erreur lors de la suppression de l'ami : " +
+                        error.message
+                    );
+                  }
+                }
+              });
+            });
+        } else {
+          console.error("Les données reçues ne sont pas un tableau :", data);
+          alert(
+            "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des amis : ", error);
+      alert(
+        "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
+      );
+    }
+  }
+
+  loadAllUserFriends();
 });

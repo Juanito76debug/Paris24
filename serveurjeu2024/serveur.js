@@ -36,6 +36,8 @@ const userSchema = new mongoose.Schema({
   contact: String,
   bio: String,
   preferences: String,
+  photo: String,
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   online: { type: Boolean, default: false },
 });
 
@@ -268,6 +270,10 @@ app.post(
 app.post("/api/messages", async (req, res) => {
   try {
     const { content } = req.body;
+    if (!content) {
+      return res.status(400).json({ error: "Contenu du message requis" });
+    }
+
     const message = new Message({ content });
     await message.save();
     // Mail adressé a l'administrateur dont le profil a été modifié
@@ -634,6 +640,64 @@ app.get("/api/friendMessages/:messageId/replies", async (req, res) => {
   }
 });
 
+//Route pour récupération de la liste d'amis de l'administrateur
+
+app.get("/api/friends", async (req, res) => {
+  try {
+    const admin = await User.findOne();
+    if (!admin) {
+      return res.status(404).json({ error: "Aucun ami trouvé" });
+    }
+    const friends = await User.find({ _id: { $ne: admin._id } });
+    res.json({ success: true, friends });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des amis :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des amis",
+    });
+  }
+});
+
+// Route pour récupérer la liste d'amis sur le profil de l'ami
+app.get("/api/users/:id/friends", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    const friends = await User.find({ _id: { $ne: user.friends } });
+    res.json({ success: true, friends });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des amis :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des amis",
+    });
+  }
+});
+
+// Route pour récupérer la liste d'amis de tous les profils
+
+app.get("/api/allUsersFriends", async (req, res) => {
+  try {
+    const users = await User.find();
+    const friends = users.map((user) => ({
+      userId: user._id,
+      username: user.username,
+      fullName: user.fullName,
+      photo: user.photo,
+    }));
+    res.json({ success: true, friends });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des amis :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des amis",
+    });
+  }
+});
+
 // Route pour supprimer un message sur le profil de l'ami
 
 app.delete("/api/friendMessages/:messageId", async (req, res) => {
@@ -666,6 +730,59 @@ app.delete("/api/allProfilesMessages/:messageId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la suppression du message",
+    });
+  }
+});
+
+// Route pour suppression d'un ami sur la liste d'amis de l'administrateur
+
+app.delete("/api/friends/:friendId", async (req, res) => {
+  try {
+    const admin = await User.findOne();
+    if (!admin) {
+      return res.status(404).json({ error: "Aucun ami trouvé" });
+    }
+
+    const friend = await User.findById(req.params.friendId);
+    if (!friend) {
+      return res.status(404).json({ error: "Ami non trouvé" });
+    }
+    admin.friends = admin.friends.filter(
+      (friend) => friend._id.toString() !== req.params.friendId
+    );
+    await admin.save();
+    res.json({ success: true, message: "Ami supprimé avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression de l'ami :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression de l'ami",
+    });
+  }
+});
+
+// Route pour suppression d'un ami sur la liste d'amis sur tous les profils
+
+app.delete("/api/allUsersFriends/:friendId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.friendId);
+    if (!user) {
+      return res.status(404).json({ error: "Ami non trouvé" });
+    }
+
+    const users = await User.updateMany(
+      { friends: req.params.friendId },
+      { $pull: { friends: req.params.friendId } }
+    );
+    res.json({
+      success: true,
+      message: "Ami supprimé avec succès sur tous les profils",
+    });
+  } catch (err) {
+    console.error("Erreur lors de la suppression de l'ami :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression de l'ami",
     });
   }
 });

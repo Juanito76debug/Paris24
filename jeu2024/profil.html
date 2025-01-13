@@ -301,6 +301,40 @@ Bonjour</textarea
         </div>
       </div>
     </div>
+    <!--Liste d'amis de l'administrateur-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Liste des Amis de l'administrateur</h5>
+              <div id="friendsList" class="row"></div>
+            </div>
+            <!--Bouton pour supprimer un ami de sa liste d'amis-->
+            <div class="col-md-4">
+              <div class="card mb-4">
+                <img
+                  src="assets/Edouard.png"
+                  class="card-img-top"
+                  alt="Photo de profil"
+                />
+
+                <div class="card-body">
+                  <h5 class="card-title">Pseudonyme</h5>
+                  <p class="card-text">Nom et Prénom</p>
+                  <button
+                    class="btn btn-danger btn-sm deleteFriendBtn"
+                    data-friend-id="<%= _id %>"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!--Affichage du profil de l'ami de l'administrateur-->
     <div class="container mt-5">
@@ -569,6 +603,20 @@ Merci de m'avoir inclus dans le groupe</textarea
         </div>
       </div>
     </div>
+
+    <!--Affichage de la liste d'amis sur le profil de l'ami-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Liste des Amis de l'ami</h5>
+              <div id="friendFriendsList" class="row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!--Affichage de tous les profils de l'administrateur-->
     <div class="container mt-5">
       <div class="row">
@@ -760,6 +808,42 @@ Bonjour</textarea
                 >
                   Supprimer
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--affichage de la liste d'amis de tous les profils.-->
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Liste des Amis de tous les profils</h5>
+                <div id="allUsersFriendsList" class="row"></div>
+              </div>
+
+              <!--Bouton pour supprimer un ami de sa liste d'amis pour tous les profils-->
+              <div class="col-md-4">
+                <div class="card mb-4">
+                  <img
+                    src="assets/Sylvie.png"
+                    class="card-img-top"
+                    alt="Photo de profil"
+                  />
+                  <div class="card-body">
+                    <h5 class="card-title">Pseudonyme</h5>
+                    <p class="card-text">Nom et Prénom</p>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm deleteFriendBtn"
+                      data-friend-id="<%= _id %>"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
