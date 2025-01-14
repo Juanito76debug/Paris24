@@ -320,11 +320,25 @@ Bonjour</textarea
                 />
 
                 <div class="card-body">
-                  <h5 class="card-title">Pseudonyme</h5>
+                  <h5 class="card-title">
+                    <a
+                      href="#"
+                      class="friend-link"
+                      data-friend-id="ID_DU_MEMBRE"
+                      >Pseudonyme</a
+                    >
+                  </h5>
                   <p class="card-text">Nom et Prénom</p>
                   <button
+                    class="btn btn-primary btn-sm sendFriendRequestBtn"
+                    data-friend-id="ID_DU_MEMBRE"
+                  >
+                    Envoyer une invitation
+                  </button>
+
+                  <button
                     class="btn btn-danger btn-sm deleteFriendBtn"
-                    data-friend-id="<%= _id %>"
+                    data-friend-id="ID_DU_MEMBRE>"
                   >
                     Supprimer
                   </button>

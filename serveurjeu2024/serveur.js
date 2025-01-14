@@ -619,6 +619,33 @@ app.post("/api/friendMessages/:messageId/replies", async (req, res) => {
   }
 });
 
+//Route pour envoyer une invitation à un ami
+app.post("/api/friends/invite", async (req, res) => {
+  try {
+    const { friendId } = req.body;
+    const user = await User.findById(friendId);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    // Ajout de l'administrateur à la liste d'amis du membre avec le statut "invitation en cours" et avec statut "en attente de confirmation"
+    user.friends.push({ friendId, status: "invitation en cours" });
+    user.friends.push({
+      friendId: req.user.id,
+      status: "en attente de confirmation",
+    });
+
+    await user.save();
+
+    res.json({ success: true, message: "Invitation envoyée réussie" });
+  } catch (err) {
+    console.error("Erreur lors de l'envoi de l'invitation :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de l'envoi de l'invitation",
+    });
+  }
+});
+
 // Route pour récupération des réponses à un message sur le profil de l'ami
 app.get("/api/friendMessages/:messageId/replies", async (req, res) => {
   try {

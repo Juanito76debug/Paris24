@@ -335,11 +335,15 @@ window.onload = function () {
             friendItem.classList.add("col-md-4");
             friendItem.innerHTML = `
             <div class="card mb-4">
-              <img class="card-img-top" alt="Photo de profil" src="${friend.username}">
+              <img class="card-img-top" alt="Photo de profil" src="${
+                friend.profilePictureUrl || "assets/Edouard.png"
+              }">
               <div class="card-body">
               <h5 class="card-title">${friend.username}</h5>
               <p class="card-text">${friend.fullName}</p>
-              <button class="btn btn-danger btn-sm deleteFriendBtn" data-friend-id="${friend._id}">Supprimer</button>
+              <button class="btn btn-danger btn-sm deleteFriendBtn" data-friend-id="${
+                friend._id
+              }">Supprimer</button>
               </div>
               </div>
               `;
@@ -397,6 +401,78 @@ window.onload = function () {
       }
     }
     loadFriends();
+  });
+
+  // Gestionnaire d'événement suite aux liens de la liste d'amis afin de charger les détails de l'administrateur
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".friend-link").forEach((link) => {
+      link.addEventListener("click", async function (event) {
+        event.preventDefault();
+        const friendId = this.getAttribute("data-friend-id");
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/users/${friendId}`
+          );
+          const data = await response.json();
+          if (response.ok) {
+            document.getElementById("adminUsername").textContent =
+              data.profile.username;
+            document.getElementById("adminFullName").value =
+              data.profile.fullName;
+          } else {
+            alert(
+              "Erreur lors de la récupération des détails de l'administrateur: " +
+                data.message
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Erreur lors de la récupération des détails de l'administrateur : ",
+            error
+          );
+          alert(
+            "Erreur lors de la récupération des détails de l'administrateur : " +
+              error.message
+          );
+        }
+      });
+    });
+    // Gestionnaire d'événements pour bouton d'envoi afin d'inviter un ami
+    document.querySelectorAll(".sendFriendRequestBtn").forEach((button) => {
+      button.addEventListener("click", async function (event) {
+        const friendId = this.getAttribute("data-friend-id");
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/friends/invite`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ friendId }),
+            }
+          );
+          const data = await response.json();
+          if (response.ok) {
+            alert("Demande d'invitation envoyée avec succès");
+          } else {
+            alert(
+              "Erreur lors de l'envoi de la demande d'invitation : " +
+                data.message
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Erreur lors de l'envoi de la demande d'invitation : ",
+            error
+          );
+          alert(
+            "Erreur lors de l'envoi de la demande d'invitation : " +
+              error.message
+          );
+        }
+      });
+    });
   });
 
   // Fonction pour voir le profil d'un ami de l'administrateur
