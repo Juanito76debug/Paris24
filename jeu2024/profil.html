@@ -335,6 +335,13 @@ Bonjour</textarea
                   >
                     Envoyer une invitation
                   </button>
+                  <!--Acceptation de l'ami à la liste d'amis de l'administrateur -->
+                  <button
+                    class="btn btn-success btn-sm acceptFriendRequestBtn"
+                    data-friend-id="ID_DU_MEMBRE"
+                  >
+                    Accepter l'invitation
+                  </button>
 
                   <button
                     class="btn btn-danger btn-sm deleteFriendBtn"
@@ -346,6 +353,70 @@ Bonjour</textarea
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <!--Confirmation du message-->
+      <div class="container mt-3">
+        <div
+          class="alert alert-success d-none"
+          id="friendRequestSuccessmessage"
+        >
+          Demande d'ami envoyée réussie!
+        </div>
+        <!--Acceptation de l'ami-->
+        <div
+          class="alert alert-success d-none"
+          id="friendRequestAcceptedMessage"
+        >
+          L'ami a été accepté!
+        </div>
+      </div>
+    </div>
+
+    <!--Liste des demandes d'amis dans le profil de l'administrateur-->
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Demandes d'ami en attente</h5>
+              <div id="friendRequestsList" class="row"></div>
+              <!--Demande d'amis a ignorer-->
+              <div class="col-md-4">
+                <div class="card mb-4">
+                  <img
+                    src="assets/Rose.png"
+                    class="card-img-top"
+                    alt="Photo de profil"
+                  />
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <a
+                        href="#"
+                        class="friend-link"
+                        data-friend-id="ID_DU_MEMBRE"
+                        >Pseudonyme</a
+                      >
+                    </h5>
+                    <p class="card-text">Nom et Prénom</p>
+                    <button
+                      class="btn btn-danger btn-sm ignoreFriendRequestBtn"
+                      data-friend-id="ID_DU_MEMBRE"
+                    >
+                      Ignorer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--Confirmation du message-->
+        <div
+          class="alert alert-success d-none"
+          id="friendRequestIgnoredMessage"
+        >
+          La demande d'ami a été ignorée!
         </div>
       </div>
     </div>

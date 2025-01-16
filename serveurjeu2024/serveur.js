@@ -636,12 +636,82 @@ app.post("/api/friends/invite", async (req, res) => {
 
     await user.save();
 
+    //Envoi d'un mail au membre choisi pour lui signaler l'invitation
+    const subject = "Invitation à rejoindre votre réseau social";
+    const message = `Vous avez été invité par ${req.user.username} à rejoindre votre réseau social.`;
+    await sendEmailConfirmation(user.email, subject, message);
+
     res.json({ success: true, message: "Invitation envoyée réussie" });
   } catch (err) {
     console.error("Erreur lors de l'envoi de l'invitation :", err);
     res.status(500).json({
       success: false,
       message: "Erreur lors de l'envoi de l'invitation",
+    });
+  }
+});
+// Route pour accepter l'invitation à un ami de l'administrateur de sa liste d'amis.
+app.post("/api/friends/accept", async (req, res) => {
+  try {
+    const { friendId } = req.body;
+    if (!req.user || !req.user.id) {
+      return res.status(400).json({ error: "Utilisateur non trouvé" });
+    }
+    console.log("Utilisateur ID :", req.user.id);
+    console.log("Friend ID :", friendId);
+
+    const user = await User.findById(req.user.id);
+    const friend = await User.findById(friendId);
+
+    if (!user || !friend) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    // Mise à jour du statut confirmé pour l'invitation
+    const friendRequest = user.friends.find(
+      (f) => f.friendId.toString() === friendId
+    );
+
+    if (friendRequest) {
+      friendRequest.status = "confirmé";
+    } else {
+      user.friends.push({ friendId, status: "confirmé" });
+    }
+    await user.save();
+
+    // Ajout de l'ami à la liste d'amis de l'administrateur avec statut "confirmé"
+    friend.friends.push({ friendId: req.user.id, status: "confirmé" });
+    await friend.save();
+
+    res.json({ success: true, message: "Invitation acceptée avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de l'acceptation de l'invitation :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de l'acceptation de l'invitation",
+    });
+  }
+});
+
+//Route pour ignorer une demande d'ami dans la liste d'amis de l'administrateur
+app.post("/api/friends/ignore", async (req, res) => {
+  try {
+    const { friendId } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!req.user || !req.user.id) {
+      return res.status(400).json({ error: "Utilisateur non trouvé" });
+    }
+    // retirer la demande d'amis
+    user.friends = user.friends.filter(
+      (friend) => friend.friend.Id.toString() !== friendId
+    );
+    await user.save();
+    res.json({ success: true, message: "Demande ignorée avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de l'ignoration de la demande :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de l'ignoration de la demande",
     });
   }
 });
@@ -676,6 +746,30 @@ app.get("/api/friends", async (req, res) => {
       return res.status(404).json({ error: "Aucun ami trouvé" });
     }
     const friends = await User.find({ _id: { $ne: admin._id } });
+    res.json({ success: true, friends });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des amis :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des amis",
+    });
+  }
+});
+
+// Route pour récupération des amis confirmés et demande d'amis
+app.get("/api/friends", async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    const friends = user.friends.map((friend) => ({
+      _id: friend.friendID._id,
+      username: friend.friendID.username,
+      fullName: friend.friendID.fullName,
+      photo: friend.friendID.photo,
+      status: friend.status,
+    }));
     res.json({ success: true, friends });
   } catch (err) {
     console.error("Erreur lors de la récupération des amis :", err);
@@ -784,6 +878,29 @@ app.delete("/api/friends/:friendId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la suppression de l'ami",
+    });
+  }
+});
+
+// Route pour supprimer un ami dans la demande de liste d'amis
+app.delete("/api/friends/:friendId", async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    //Ami a retirer sur la liste de demande d'amis de l'administrateur
+    user.friends = user.friends.filter(
+      (friend) => friend.friendId.toString() !== req.params.friendId
+    );
+
+    await user.save();
+    res.json({ success: true, message: "Demande d'ami supprimée avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression de la demande d'ami :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression de la demande d'ami",
     });
   }
 });

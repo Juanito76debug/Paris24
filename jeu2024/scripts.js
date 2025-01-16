@@ -307,9 +307,11 @@ window.onload = function () {
     }
   }
 
-  //Fonction pour chargement et affichage de la liste d'amis de l'administrateur
+  // Fonction pour chargement et affichage de la liste d'amis de l'administrateur
   document.addEventListener("DOMContentLoaded", function () {
     const friendsList = document.getElementById("friendsList");
+    // Fonction pour chargement et affichage des demandes d'amis
+    const friendRequestsList = document.getElementById("friendRequestsList");
 
     async function loadFriends() {
       try {
@@ -328,78 +330,96 @@ window.onload = function () {
         }
         const data = await response.json();
         friendsList.innerHTML = "";
+        friendRequestsList.innerHTML = "";
 
         if (Array.isArray(data.friends)) {
           data.friends.forEach((friend) => {
             const friendItem = document.createElement("div");
             friendItem.classList.add("col-md-4");
             friendItem.innerHTML = `
-            <div class="card mb-4">
-              <img class="card-img-top" alt="Photo de profil" src="${
-                friend.profilePictureUrl || "assets/Edouard.png"
-              }">
-              <div class="card-body">
-              <h5 class="card-title">${friend.username}</h5>
-              <p class="card-text">${friend.fullName}</p>
-              <button class="btn btn-danger btn-sm deleteFriendBtn" data-friend-id="${
-                friend._id
-              }">Supprimer</button>
-              </div>
-              </div>
-              `;
-            friendsList.appendChild(friendItem);
+          <div class="card mb-4">
+            <img class="card-img-top" alt="Photo de profil" src="${
+              friend.profilePictureUrl || "assets/Edouard.png"
+            }">
+            <img class="card-img-top" alt="Photo de profil" src="${
+              friend.profilePictureUrl || "assets/Rose.png"
+            }">
+            <div class="card-body">
+            <h5 class="card-title">${friend.username}</h5>
+            <p class="card-text">${friend.fullName}</p>
+            ${
+              friend.status === "confirmé"
+                ? `
+            <button class="btn btn-danger btn-sm deleteFriendBtn" data-friend-id="${friend._id}">Supprimer</button>
+            `
+                : `
+            <button class="btn btn-primary btn-sm acceptFriendRequestBtn" data-friend-id="${friend._id}">Accepter l'invitation</button>
+            <button class="btn btn-primary btn-sm ignoreFriendRequestBtn" data-friend-id="${friend._id}">Ignorer l'invitation</button>
+            `
+            }
+            </div>
+            </div>
+            `;
+            if (friend.status === "confirmé") {
+              friendsList.appendChild(friendItem);
+            } else {
+              friendRequestsList.appendChild(friendItem);
+            }
+          });
 
-            // Gestionnaire d'événements pour les boutons de suppression de la liste d'amis de l'administrateur
-            friendItem
-              .querySelector(".deleteFriendBtn")
-              .addEventListener("click", async function () {
-                const friendId = this.getAttribute("data-friend-id");
-                if (confirm("Etes vous certain de supprimer cet ami?")) {
-                  try {
-                    const response = await fetch(
-                      `http://localhost:3000/api/friends/${friendId}`,
-                      {
-                        method: "DELETE",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                      }
-                    );
-                    const data = await response.json();
-                    if (response.ok) {
-                      alert("Ami supprimé avec succès");
-                      loadFriends();
-                    } else {
-                      alert(
-                        "Erreur lors de la suppression de l'ami : " +
-                          data.message
-                      );
+          // Gestionnaire d'événements pour les boutons de suppression de la liste d'amis de l'administrateur
+          document.querySelectorAll(".deleteFriendBtn").forEach((button) => {
+            button.addEventListener("click", async function () {
+              const friendId = this.getAttribute("data-friend-id");
+              if (confirm("Etes vous certain de supprimer cet ami?")) {
+                try {
+                  const response = await fetch(
+                    `http://localhost:3000/api/friends/${friendId}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
                     }
-                  } catch (error) {
-                    console.error(
-                      "Erreur lors de la suppression de l'ami : ",
-                      error
+                  );
+                  const data = await response.json();
+                  if (response.ok) {
+                    // Message de confirmation
+                    const successMessage = document.getElementById(
+                      "friendRemovedMessage"
                     );
+                    successMessage.classList.remove("d-none");
+                    setTimeout(() => {
+                      successMessage.classList.add("d-none");
+                    }, 3000);
+                    alert("Ami supprimé avec succès");
+                    loadFriends();
+                  } else {
                     alert(
-                      "Erreur lors de la suppression de l'ami. Veuillez réessayer plus tard."
+                      "Erreur lors de la suppression de l'ami : " + data.message
                     );
                   }
+                } catch (error) {
+                  console.error(
+                    "Erreur lors de la suppression de l'ami : ",
+                    error
+                  );
+                  alert(
+                    "Erreur lors de la suppression de l'ami : " + error.message
+                  );
                 }
-              });
+              }
+            });
           });
         } else {
-          console.error("Les données reçues ne sont pas un tableau");
-          alert(
-            "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
-          );
+          alert("Erreur lors de la récupération des amis : " + data.message);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des amis : ", error);
-        alert(
-          "Erreur lors de la récupération des amis. Veuillez réessayer plus tard."
-        );
+        console.error("Erreur lors de la récupération des amis :", error);
+        alert("Erreur lors de la récupération des amis : " + error.message);
       }
     }
+
     loadFriends();
   });
 
@@ -454,7 +474,14 @@ window.onload = function () {
           );
           const data = await response.json();
           if (response.ok) {
-            alert("Demande d'invitation envoyée avec succès");
+            // Confirmation du message
+            const successMessage = document.getElementById(
+              "friendRequestSuccessMessage"
+            );
+            successMessage.classList.remove("d-none");
+            setTimeout(() => {
+              successMessage.classList.add("d-none");
+            }, 3000);
           } else {
             alert(
               "Erreur lors de l'envoi de la demande d'invitation : " +
@@ -472,6 +499,102 @@ window.onload = function () {
           );
         }
       });
+    });
+  });
+  // Gestionnaire d'événements pour que l'invitation de l'ami soit acceptée, ignorer et supprimer
+  document.querySelectorAll(".acceptFriendRequestBtn").forEach((button) => {
+    button.addEventListener("click", async function () {
+      const friendId = this.getAttribute("data-friend-id");
+      if (!friendId || friendId === "ID_DU_MEMBRE") {
+        return;
+      }
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/friends/accept`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ friendId }),
+          }
+        );
+
+        const data = await response.json();
+        if (response.ok) {
+          // Message de confirmation acceptée
+          const successMessage = document.getElementById(
+            "friendRequestAcceptedMessage"
+          );
+          successMessage.classList.remove("d-none");
+          setTimeout(() => {
+            successMessage.classList.add("d-none");
+          }, 3000);
+          loadFriends();
+        } else {
+          alert(
+            "Erreur lors de l'acceptation de la demande d'invitation : " +
+              data.message
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'acceptation de la demande d'invitation : ",
+          error
+        );
+        alert(
+          "Erreur lors de l'acceptation de la demande d'invitation : " +
+            error.message
+        );
+      }
+    });
+  });
+
+  // ignorer la demande d'amis
+  document.querySelectorAll(".ignoreFriendRequestBtn").forEach((button) => {
+    button.addEventListener("click", async function () {
+      const friendId = this.getAttribute("data-friend-id");
+      if (!friendId || friendId === "ID_DU_MEMBRE") {
+        return;
+      }
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/friends/ignore`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ friendId }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          // Message de confirmation pour ignorer la demande d'ajout
+          const ignoredMessage = document.getElementById(
+            "friendRequestIgnoredMessage"
+          );
+          ignoredMessage.classList.remove("d-none");
+          setTimeout(() => {
+            ignoredMessage.classList.add("d-none");
+          }, 3000);
+          loadFriends();
+        } else {
+          alert(
+            "Erreur lors de l'ignoration de la demande d'invitation : " +
+              data.message
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'ignoration de la demande d'invitation : ",
+          error
+        );
+        alert(
+          "Erreur lors de l'ignoration de la demande d'invitation : " +
+            error.message
+        );
+      }
     });
   });
 
