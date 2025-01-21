@@ -598,6 +598,105 @@ window.onload = function () {
     });
   });
 
+  //Fonction pour chargement des amis confirmés et MAJ de la liste de sélection
+  document.addEventListener("DomContentLoaded", function () {
+    const confirmedFriendsSelect = document.getElementById(
+      "confirmedFriendsSelect"
+    );
+    //Fonction pour gérer un ami a recommandé
+    const recommendFriendButton = document.getElementById(
+      "recommendFriendButton"
+    );
+    // Fonction pour afficher le message de confirmation après recommandation de l'ami
+    const recommendationMessage = document.getElementById(
+      "recommendationMessage"
+    );
+
+    async function loadConfirmedFriends() {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/confirmedfriends",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          console.warn("Problème pour obtenir la confirmation d'ami");
+          alert(
+            "Problème pour obtenir la confirmation d'ami. Veuillez réessayer plus tard."
+          );
+          return;
+        }
+        const data = await response.json();
+        confirmedFriendsSelect.innerHTML = "";
+
+        if (Array.isArray(data.friends)) {
+          data.friends.forEach((friend) => {
+            const option = document.createElement("option");
+            option.value = friend._id;
+            option.innerHTML = `<img src="${friend.photo}" class="inline-image" alt="Photo de ${friend.username}" >${friend.username}`;
+            confirmedFriendsSelect.appendChild(option);
+          });
+
+          // Ajouter un exemple d'ami
+          const exampleOption = document.createElement("option");
+          exampleOption.value = "exampleId";
+          exampleOption.innerHTML = `<img src="assets/Jose.png" class="inline-image" alt="Photo de Jose"> Jose`;
+          confirmedFriendsSelect.appendChild(exampleOption);
+        } else {
+          console.error("Les données reçues ne sont pas un tableau:", data);
+          alert(
+            "Erreur lors de la récupération des confirmations d'amis. Veuillez réessayer plus tard."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération des confirmations d'amis : ",
+          error
+        );
+        alert(
+          "Erreur lors de la récupération des confirmations d'amis : " +
+            error.message
+        );
+      }
+    }
+    recommendFriendButton.addEventListener("click", async function () {
+      const selectedFriendId = confirmedFriendsSelect.value;
+      const recommenderId = "Edouardid";
+
+      if (!selectedFriendId) {
+        alert("Veuillez sélectionner un ami pour recommander");
+        return;
+      }
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/recommendFriend`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ friendId: selectedFriendId, recommenderId }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          alert("Ami recommandé réussie");
+        } else {
+          alert("Erreur lors de la recommandation de l'ami : " + data.message);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la recommandation de l'ami : ", error);
+        alert("Erreur lors de la recommandation de l'ami : " + error.message);
+      }
+    });
+
+    loadConfirmedFriends();
+  });
+
   // Fonction pour voir le profil d'un ami de l'administrateur
   window.viewFriendProfile = async function (userId) {
     try {

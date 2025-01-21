@@ -716,6 +716,36 @@ app.post("/api/friends/ignore", async (req, res) => {
   }
 });
 
+// Route pour recommander un ami et envoi d'une notification par mail
+
+app.post("/api/recommendFriend", async (req, res) => {
+  try {
+    const { friendId, recommenderId } = req.body;
+    const admin = await User.findOne();
+    const friend = await User.findById(friendIdId);
+    const recommender = await User.findById(recommenderId);
+
+    if (!admin || !friend || !recommender) {
+      return res.status(404).json({ error: "Ami recommandé non trouvé" });
+    }
+    // Ajout de l'ami recommandé à la liste d'amis de l'administrateur
+    admin.friends.push({ friendId, status: "recommandé", recommenderId });
+    await admin.save();
+    // Envoi d'une notification par mail à l'administrateur pour lui signaler la recommandation
+    const subject = "Nouvelle recommandation d'ami";
+    const message = `Votre ami ${recommender.username} vous a recommandé par ${friend.username}.`;
+    await sendEmailConfirmation(admin.email, subject, message);
+
+    res.json({ success: true, message: "Ami recommandé avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la recommandation de l'ami :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la recommandation de l'ami",
+    });
+  }
+});
+
 // Route pour récupération des réponses à un message sur le profil de l'ami
 app.get("/api/friendMessages/:messageId/replies", async (req, res) => {
   try {
@@ -815,6 +845,28 @@ app.get("/api/allUsersFriends", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la récupération des amis",
+    });
+  }
+});
+
+// Route pour récupérer les amis confirmés de l'administrateur
+
+app.get("/api/confirmedFriends", async (req, res) => {
+  try {
+    const admin = await User.findOne();
+    if (!admin) {
+      return res.status(404).json({ error: "Aucun ami trouvé" });
+    }
+    const friends = await User.find({
+      _id: { $in: admin.friends },
+      "friends.status": "confirmation réussie",
+    });
+    res.json({ success: true, friends });
+  } catch (err) {
+    console.error("Erreur lors de la récupération des amis confirmés :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des amis confirmés",
     });
   }
 });

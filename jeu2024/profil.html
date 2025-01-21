@@ -381,6 +381,7 @@ Bonjour</textarea
             <div class="card-body">
               <h5 class="card-title">Demandes d'ami en attente</h5>
               <div id="friendRequestsList" class="row"></div>
+
               <!--Demande d'amis a ignorer-->
               <div class="col-md-4">
                 <div class="card mb-4">
@@ -410,6 +411,25 @@ Bonjour</textarea
               </div>
             </div>
           </div>
+          <!--Liste de selection d'ami possédant le statut confirmé-->
+          <div class="mb-3">
+            <label for="confirmedFriendSelect" class="form-label"
+              >Ami a séléctionné</label
+            >
+            <select
+              class="form-select select-with-images"
+              id="confirmedFriendSelect"
+              aria-label="Select a friend"
+            ></select>
+          </div>
+          <button id="recommendFriendButton" class="btn btn-primary">
+            Recommander un ami
+          </button>
+          <!--Message affiché au membre ayant fait la recommandation pour indiquer que celle ci  até envoyée-->
+          <div
+            id="recommendationMessage"
+            class="alert alert-success d-none mt-3"
+          ></div>
         </div>
         <!--Confirmation du message-->
         <div
