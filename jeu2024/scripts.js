@@ -600,8 +600,11 @@ window.onload = function () {
 
   //Fonction pour chargement des amis confirmés et MAJ de la liste de sélection
   document.addEventListener("DomContentLoaded", function () {
-    const confirmedFriendsSelect = document.getElementById(
-      "confirmedFriendsSelect"
+    const confirmedFriendDropdown = document.getElementById(
+      "confirmedFriendDropdown"
+    );
+    const confirmedFriendDropdownMenu = document.getElementById(
+      "confirmedFriendDropdownMenu"
     );
     //Fonction pour gérer un ami a recommandé
     const recommendFriendButton = document.getElementById(
@@ -611,6 +614,7 @@ window.onload = function () {
     const recommendationMessage = document.getElementById(
       "recommendationMessage"
     );
+    let selectedFriendId = null;
 
     async function loadConfirmedFriends() {
       try {
@@ -631,41 +635,49 @@ window.onload = function () {
           return;
         }
         const data = await response.json();
-        confirmedFriendsSelect.innerHTML = "";
+        confirmedFriendDropdownMenu.innerHTML = "";
 
         if (Array.isArray(data.friends)) {
           data.friends.forEach((friend) => {
-            const option = document.createElement("option");
-            option.value = friend._id;
-            option.innerHTML = `<img src="${friend.photo}" class="inline-image" alt="Photo de ${friend.username}" >${friend.username}`;
-            confirmedFriendsSelect.appendChild(option);
+            const li = document.createElement("li");
+            li.innerHTML = `<a class="dropdown-item" href="#" data-friend-id="${friend._id}"><img src="${friend.photo}" class="inline-image" alt="Photo de ${friend.username}"> ${friend.username}</a>`;
+            confirmedFriendDropdownMenu.appendChild(li);
           });
 
-          // Ajouter un exemple d'ami
-          const exampleOption = document.createElement("option");
-          exampleOption.value = "exampleId";
-          exampleOption.innerHTML = `<img src="assets/Jose.png" class="inline-image" alt="Photo de Jose"> Jose`;
-          confirmedFriendsSelect.appendChild(exampleOption);
+          // Ajout d'un exemple d'ami
+          const exampleLi = document.createElement("li");
+          exampleLi.innerHTML = `<a class="dropdown-item" href="#" data-friend-id="exampleId"><img src="assets/Jose.png" class="inline-image" alt="Photo de Jose"> Jose</a>`;
+          confirmedFriendDropdownMenu.appendChild(exampleLi);
+          confirmedFriendDropdownMenu
+            .querySelectorAll(".dropdown-item")
+            .forEach((item) => {
+              item.addEventListener("click", function (event) {
+                event.preventDefault();
+                selectedFriendId = this.getAttribute("data-friend-id");
+                const friendPhoto = this.getAttribute("data-friend-photo");
+                confirmedFriendDropdown.textContent = this.textContent;
+                selectedFriendImage.innerHTML = `<img src="${friendPhoto}" class="img-fluid" alt="Photo de l'ami séléctionné">`;
+              });
+            });
         } else {
           console.error("Les données reçues ne sont pas un tableau:", data);
           alert(
             "Erreur lors de la récupération des confirmations d'amis. Veuillez réessayer plus tard."
           );
         }
-      } catch (error) {
+      } catch {
         console.error(
           "Erreur lors de la récupération des confirmations d'amis : ",
           error
         );
         alert(
-          "Erreur lors de la récupération des confirmations d'amis : " +
-            error.message
+          "Erreur lors de la récupération des confirmations d'amis. Veuillez réessayer plus tard."
         );
       }
     }
     recommendFriendButton.addEventListener("click", async function () {
       const selectedFriendId = confirmedFriendsSelect.value;
-      const recommenderId = "Edouardid";
+      const recommenderId = "EdouardId";
 
       if (!selectedFriendId) {
         alert("Veuillez sélectionner un ami pour recommander");
@@ -684,7 +696,11 @@ window.onload = function () {
         );
         const data = await response.json();
         if (response.ok) {
-          alert("Ami recommandé réussie");
+          recommendationMessage.textContent = "Recommandation envoyée Réussie";
+          recommendationMessage.classList.remove("d-none");
+          setTimeout(() => {
+            recommendationMessage.classList.add("d-none");
+          }, 3000);
         } else {
           alert("Erreur lors de la recommandation de l'ami : " + data.message);
         }

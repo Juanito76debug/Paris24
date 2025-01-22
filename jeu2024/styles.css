@@ -12,15 +12,26 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  object-fit: cover; /* Pour étirer l'image */
-  height: 400px; /* Ajuste cette valeur selon la longueur désirée */
+  object-fit: cover;
+  height: 400px;
 }
 
-.select-with-images option {
+.select-with-images .dropdown-item {
   display: flex;
   align-items: center;
 }
 
-.select-with-images img {
+.select-with-images .dropdown-item img {
   margin-right: 10px;
+}
+
+#confirmedFriendDropdown {
+  background-image: url("assets/Jose.png");
+  background-position: center;
+  background-size: cover;
+  color: white;
+  height: auto;
+  line-height: 120px;
+  font-size: 12pt;
+  width: 150px;
 }
