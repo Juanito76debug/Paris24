@@ -656,7 +656,7 @@ window.onload = function () {
                 selectedFriendId = this.getAttribute("data-friend-id");
                 const friendPhoto = this.getAttribute("data-friend-photo");
                 confirmedFriendDropdown.textContent = this.textContent;
-                selectedFriendImage.innerHTML = `<img src="${friendPhoto}" class="img-fluid" alt="Photo de l'ami séléctionné">`;
+                selectedFriendId.innerHTML = `<img src="${friendPhoto}" class="img-fluid" alt="Photo de l'ami séléctionné">`;
               });
             });
         } else {
@@ -1893,4 +1893,228 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   loadAllUserFriends();
+});
+
+// Fonction pour gérer les sujets de discussion privée avec plusieurs amis de l'administrateur.
+
+document.addEventListener("DOMContentLoaded", function () {
+  const messageForm = document.getElementById("messageForm");
+  const messageInput = document.getElementById("messageInput");
+  const chatWindow = document.getElementById("chatWindow");
+
+  if (messageForm) {
+    messageForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const message = messageInput.value.trim();
+      if (!message) {
+        alert("Veuillez saisir un message.");
+        return;
+      }
+      try {
+        const response = await fetch("http://localhost:3000/api/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: message,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          messageInput.value = "";
+          loadMessages();
+        } else {
+          alert("Erreur lors de l'envoi du message privé : " + data.message);
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'envoi du message privé : ", error);
+        alert("Erreur lors de l'envoi du message privé : " + error.message);
+      }
+    });
+  }
+
+  async function loadMessages() {
+    try {
+      const response = await fetch("http://localhost:3000/api/messages", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les messages privés");
+        alert(
+          "Problème pour obtenir les messages privés. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+      const data = await response.json();
+      chatWindow.innerHTML = "";
+
+      if (Array.isArray(data)) {
+        data.forEach((message) => {
+          const messageItem = document.createElement("div");
+          messageItem.classList.add("message-item");
+          messageItem.innerHTML = `<p>${message.content}</p>
+          <small class="text-muted">${new Date(
+            message.createdAt
+          ).toLocaleString()}</small>`;
+          chatWindow.appendChild(messageItem);
+        });
+      } else {
+        console.error("Les données reçues ne sont pas un tableau :", data);
+        alert(
+          "Erreur lors de la récupération des messages privés. Veuillez réessayer plus tard."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des messages privés : ",
+        error
+      );
+      alert(
+        "Erreur lors de la récupération des messages privés. Veuillez réessayer plus tard."
+      );
+    }
+  }
+
+  loadMessages();
+});
+
+// Fonction pour gérer les sujets de discussion privée avec tous les profils
+
+document.addEventListener("DOMContentLoaded", function () {
+  const allmessageForm = document.getElementById("allmessagesForm");
+  const allmessageInput = document.getElementById("allmessageInput");
+  const adminChatWindow = document.getElementById("adminChatWindow");
+  const allUsersList = document.getElementById("allusersList");
+
+  if (allmessageForm) {
+    allmessageForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const message = allmessageInput.value.trim();
+      if (!message) {
+        alert("Veuillez saisir un message.");
+        return;
+      }
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/postAllProfiles",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              content: message,
+            }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          allmessageInput.value = "";
+          loadAllMessages();
+        } else {
+          alert("Erreur lors de l'envoi du message publique : " + data.message);
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'envoi du message publique : ", error);
+        alert("Erreur lors de l'envoi du message publique : " + error.message);
+      }
+    });
+  }
+
+  async function loadAllMessages() {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/postAllProfilesMessages",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.warn("Problème pour obtenir les messages publiques");
+        alert(
+          "Problème pour obtenir les messages publiques. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+      const data = await response.json();
+      adminChatWindow.innerHTML = "";
+
+      if (Array.isArray(data)) {
+        data.forEach((message) => {
+          const messageItem = document.createElement("div");
+          messageItem.classList.add("message-item");
+          messageItem.innerHTML = `<p>${message.content}</p>
+          <small class="text-muted">${new Date(
+            message.createdAt
+          ).toLocaleString()}</small>`;
+          adminChatWindow.appendChild(messageItem);
+        });
+      } else {
+        console.error("Les données reçues ne sont pas un tableau :", data);
+        alert(
+          "Erreur lors de la récupération des messages publiques. Veuillez réessayer plus tard."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des messages publiques : ",
+        error
+      );
+      alert(
+        "Erreur lors de la récupération des messages publiques. Veuillez réessayer plus tard."
+      );
+    }
+  }
+
+  async function loadAllUsers() {
+    try {
+      const response = await fetch("http://localhost:3000/api/Users", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        console.warn("Problème pour obtenir la liste des utilisateurs");
+        alert(
+          "Problème pour obtenir la liste des utilisateurs. Veuillez réessayer plus tard."
+        );
+        return;
+      }
+      const data = await response.json();
+      allUsersList.innerHTML = "";
+
+      if (Array.isArray(data)) {
+        data.forEach((user) => {
+          const userItem = document.createElement("div");
+          userItem.classList.add("list-group-item");
+          userItem.innerHTML = `<p>${user.username}</p>`;
+          allUsersList.appendChild(userItem);
+        });
+      } else {
+        console.error("Les données reçues ne sont pas un tableau :", data);
+        alert(
+          "Erreur lors de la récupération de la liste des utilisateurs. Veuillez réessayer plus tard."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération de la liste des utilisateurs : ",
+        error
+      );
+      alert(
+        "Erreur lors de la récupération de la liste des utilisateurs. Veuillez réessayer plus tard."
+      );
+    }
+  }
+  loadAllUsers();
+  loadAllMessages();
 });

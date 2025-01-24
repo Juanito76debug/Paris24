@@ -355,6 +355,7 @@ app.get("/api/friendMessages", async (req, res) => {
 app.post("/api/postAllProfiles", async (req, res) => {
   try {
     const { content } = req.body;
+
     const users = await User.find();
 
     const messages = users.map((user) => ({
@@ -728,8 +729,16 @@ app.post("/api/recommendFriend", async (req, res) => {
     if (!admin || !friend || !recommender) {
       return res.status(404).json({ error: "Ami recommandé non trouvé" });
     }
-    // Ajout de l'ami recommandé à la liste d'amis de l'administrateur
-    admin.friends.push({ friendId, status: "recommandé", recommenderId });
+
+    // Ajout de l'administrateur à la liste d'amis de l'ami recommandé avec statut "invitation en cours"
+    friend.friends.push({ friendId, status: "invitation en cours" });
+    await friend.save();
+
+    // Ajout de l'ami recommandé à la liste d'amis de l'administrateur avec "statut "en attente de confirmation"
+    admin.friends.push({
+      friendId: friend._id,
+      status: "confirmation en attente",
+    });
     await admin.save();
     // Envoi d'une notification par mail à l'administrateur pour lui signaler la recommandation
     const subject = "Nouvelle recommandation d'ami";
@@ -742,6 +751,41 @@ app.post("/api/recommendFriend", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la recommandation de l'ami",
+    });
+  }
+});
+
+// Route pour envoyer un sujet de discussion privée
+
+app.post("/api/messages", async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) {
+      return res.status(400).json({ error: "Contenu du message requis" });
+    }
+    const message = new Message({ content });
+    await message.save();
+    res.json({ success: true, message: "Message envoyé Réussie" });
+  } catch (err) {
+    console.error("Erreur lors de l'envoi du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de l'envoi du message",
+    });
+  }
+});
+
+// Route pour récupération des sujets de discussion privée
+
+app.get("/api/messages", async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    console.error("Erreur lors de la récupération des messages :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des messages",
     });
   }
 });
