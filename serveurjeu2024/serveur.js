@@ -355,6 +355,9 @@ app.get("/api/friendMessages", async (req, res) => {
 app.post("/api/postAllProfiles", async (req, res) => {
   try {
     const { content } = req.body;
+    if (!content) {
+      return res.status(400).json({ error: "Contenu du message requis" });
+    }
 
     const users = await User.find();
 
@@ -1023,6 +1026,52 @@ app.delete("/api/allUsersFriends/:friendId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la suppression de l'ami",
+    });
+  }
+});
+
+// Route pour supprimer une discussion privée chez plusieurs amis
+
+app.delete("/api/deleteDiscussion", async (req, res) => {
+  try {
+    const { senderId } = req.body;
+    if (!senderId) {
+      return res.status(400).json({ error: "Id de l'expéditeur requis" });
+    }
+    await Message.deleteMany({ senderId });
+    res.json({ success: true, message: "Discussion supprimée avec succès" });
+  } catch (err) {
+    console.error(
+      "Erreur lors de la suppression de la discussion privée :",
+      err
+    );
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression de la discussion privée",
+    });
+  }
+});
+// Route pour supprimer une discussion privée chez tous les profils
+
+app.delete("/api/alldeleteDiscussion", async (req, res) => {
+  try {
+    const { senderId } = req.body;
+    if (!senderId) {
+      return res.status(400).json({ error: "Id de l'expéditeur requis" });
+    }
+    await Message.deleteMany({ senderId });
+    res.json({
+      success: true,
+      message: "Discussion supprimée avec succès sur tous les profils",
+    });
+  } catch (err) {
+    console.error(
+      "Erreur lors de la suppression de la discussion privée :",
+      err
+    );
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression de la discussion privée",
     });
   }
 });

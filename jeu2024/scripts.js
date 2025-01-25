@@ -1895,12 +1895,13 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAllUserFriends();
 });
 
-// Fonction pour gérer les sujets de discussion privée avec plusieurs amis de l'administrateur.
+// Fonction pour gérer les sujets de discussion privée avec plusieurs amis de l'administrateur et suppression.
 
 document.addEventListener("DOMContentLoaded", function () {
   const messageForm = document.getElementById("messageForm");
   const messageInput = document.getElementById("messageInput");
   const chatWindow = document.getElementById("chatWindow");
+  const deleteDiscussionBtn = document.getElementById("deleteDiscussionBtn");
 
   if (messageForm) {
     messageForm.addEventListener("submit", async function (event) {
@@ -1930,6 +1931,48 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (error) {
         console.error("Erreur lors de l'envoi du message privé : ", error);
         alert("Erreur lors de l'envoi du message privé : " + error.message);
+      }
+    });
+  }
+
+  // Suppression de la discussion privé ouvert par l'administrateur
+  if (deleteDiscussionBtn) {
+    deleteDiscussionBtn.addEventListener("click", async function () {
+      if (
+        confirm(
+          "Etes-vous certain de vouloir supprimer cette discussion privée?"
+        )
+      ) {
+        try {
+          const response = await fetch(
+            "http://localhost:3000/api/deleteDiscussion",
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const data = await response.json();
+          if (response.ok) {
+            alert("Suppression de la discussion privée réussie!");
+            chatWindow.innerHTML = "";
+          } else {
+            alert(
+              "Erreur lors de la suppression de la discussion privée : " +
+                data.message
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Erreur lors de la suppression de la discussion privée : ",
+            error
+          );
+          alert(
+            "Erreur lors de la suppression de la discussion privée : " +
+              error.message
+          );
+        }
       }
     });
   }
@@ -1982,13 +2025,16 @@ document.addEventListener("DOMContentLoaded", function () {
   loadMessages();
 });
 
-// Fonction pour gérer les sujets de discussion privée avec tous les profils
+// Fonction pour gérer les sujets de discussion privée avec tous les profils et suppression
 
 document.addEventListener("DOMContentLoaded", function () {
   const allmessageForm = document.getElementById("allmessagesForm");
   const allmessageInput = document.getElementById("allmessageInput");
   const adminChatWindow = document.getElementById("adminChatWindow");
-  const allUsersList = document.getElementById("allusersList");
+  const allUsersList = document.getElementById("allUsersList");
+  const alldeleteDiscussionBtn = document.getElementById(
+    "alldeleteDiscussionBtn"
+  );
 
   if (allmessageForm) {
     allmessageForm.addEventListener("submit", async function (event) {
@@ -2025,10 +2071,48 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Suppression de la discussion publique ouverte par l'administrateur sur tous les profils
+  if (alldeleteDiscussionBtn) {
+    alldeleteDiscussionBtn.addEventListener("click", async function () {
+      if (confirm("Etes vous certain de supprimer cette discussion?")) {
+        try {
+          const response = await fetch(
+            "http://localhost:3000/api/alldeleteDiscussion",
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const data = await response.json();
+          if (response.ok) {
+            alert("Suppression de la discussion publique réussie!");
+            adminChatWindow.innerHTML = "";
+          } else {
+            alert(
+              "Erreur lors de la suppression de la discussion publique : " +
+                data.message
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Erreur lors de la suppression de la discussion publique : ",
+            error
+          );
+          alert(
+            "Erreur lors de la suppression de la discussion publique : " +
+              error.message
+          );
+        }
+      }
+    });
+  }
+
   async function loadAllMessages() {
     try {
       const response = await fetch(
-        "http://localhost:3000/api/postAllProfilesMessages",
+        "http://localhost:3000/api/allProfilesMessages",
         {
           method: "GET",
           headers: {
