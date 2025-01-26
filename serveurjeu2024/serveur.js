@@ -778,12 +778,39 @@ app.post("/api/messages", async (req, res) => {
   }
 });
 
+//Route pour publier un message sur un sujets de discussion privée auquel l'administrateur participe
+app.post("/api/messages", async (req, res) => {
+  try {
+    const { recipients, content } = req.body;
+    if (!recipients || !content || !Array.isArray(recipients)) {
+      return res
+        .status(400)
+        .json({ error: "Destinataire et contenu du message requis" });
+    }
+
+    const users = await User.find({ username: { $in: recipients } });
+    const messages = users.map((user) => ({
+      recipientId: user._id,
+      senderId: req.body.senderId,
+      content,
+    }));
+    await Message.insertMany(messages);
+    res.json({ success: true, message: "Message publié avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la publication du message :", err);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la publication du message",
+    });
+  }
+});
+
 // Route pour récupération des sujets de discussion privée
 
 app.get("/api/messages", async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
-    res.json(messages);
+    res.json({ success: true, messages });
   } catch (err) {
     console.error("Erreur lors de la récupération des messages :", err);
     res.status(500).json({
@@ -1051,6 +1078,30 @@ app.delete("/api/deleteDiscussion", async (req, res) => {
     });
   }
 });
+
+// Route pour supprimer un message dans une discussion privée auquel l'administrateur participe avec plusieurs amis.
+app.delete("/api/deleteDiscussion", async (req, res) => {
+  try {
+    const { recipients } = req.body;
+    if (!recipients || !Array.isArray(recipients)) {
+      return res.status(400).json({ error: "Liste des destinataires requis" });
+    }
+    const users = await User.find({ username: { $in: recipients } });
+    const userIds = users.map((user) => user._id);
+    await Message.deleteMany({ recipientId: { $in: userIds } });
+    res.json({ success: true, message: "Discussion supprimée avec succès" });
+  } catch (err) {
+    console.error(
+      "Erreur lors de la suppression de la discussion privée :",
+      err
+    );
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la suppression de la discussion privée",
+    });
+  }
+});
+
 // Route pour supprimer une discussion privée chez tous les profils
 
 app.delete("/api/alldeleteDiscussion", async (req, res) => {

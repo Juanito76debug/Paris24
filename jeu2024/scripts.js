@@ -1218,11 +1218,46 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             });
           });
-        } else {
-          console.error("Les données reçues ne sont pas un tableau :", data);
-          alert(
-            "Erreur lors de la récupération des messages. Veuillez réessayer plus tard."
-          );
+
+          // Gestionnaire d'événements pour supprimer le message sur le profil de l'administrateur
+          document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
+            button.addEventListener("click", async function () {
+              const messageId = this.getAttribute("data-message-id");
+              if (confirm("Êtes-vous certain de supprimer ce message?")) {
+                try {
+                  const response = await fetch(
+                    `http://localhost:3000/api/messages/${messageId}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    }
+                  );
+
+                  const data = await response.json();
+                  if (response.ok) {
+                    alert("Suppression du message réussie!");
+                    loadMessages();
+                  } else {
+                    alert(
+                      "Erreur lors de la suppression du message: " +
+                        data.message
+                    );
+                  }
+                } catch (error) {
+                  console.error(
+                    "Erreur lors de la suppression du message : ",
+                    error
+                  );
+                  alert(
+                    "Erreur lors de la suppression du message : " +
+                      error.message
+                  );
+                }
+              }
+            });
+          });
         }
       }
     } catch (error) {
@@ -1232,37 +1267,6 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   }
-
-  // Gestionnaire d'événements pour supprimer le message sur le profil de l'administrateur
-  document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
-    button.addEventListener("click", async function () {
-      const messageId = this.getAttribute("data-message-id");
-      if (confirm("Êtes-vous certain de supprimer ce message?")) {
-        try {
-          const response = await fetch(
-            `http://localhost:3000/api/messages/${messageId}`,
-            {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          const data = await response.json();
-          if (response.ok) {
-            alert("Suppression du message réussie!");
-            loadMessages();
-          } else {
-            alert("Erreur lors de la suppression du message: " + data.message);
-          }
-        } catch (error) {
-          console.error("Erreur lors de la suppression du message : ", error);
-          alert("Erreur lors de la suppression du message : " + error.message);
-        }
-      }
-    });
-  });
 
   async function loadReplies(messageId, repliesList) {
     try {
@@ -1283,23 +1287,25 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       const data = await response.json();
-      repliesList.innerHTML = "";
+      if (repliesList) {
+        repliesList.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((reply) => {
-          const replyItem = document.createElement("div");
-          replyItem.classList.add("list-group-item");
-          replyItem.innerHTML = `
+        if (Array.isArray(data)) {
+          data.forEach((reply) => {
+            const replyItem = document.createElement("div");
+            replyItem.classList.add("list-group-item");
+            replyItem.innerHTML = `
             <p>${reply.content}</p>
             <small class="text-muted"></small>
           `;
-          repliesList.appendChild(replyItem);
-        });
-      } else {
-        console.error("Les données reçues ne sont pas un tableau :", data);
-        alert(
-          "Erreur lors de la récupération des réponses. Veuillez réessayer plus tard."
-        );
+            repliesList.appendChild(replyItem);
+          });
+        } else {
+          console.error("Les données reçues ne sont pas un tableau :", data);
+          alert(
+            "Erreur lors de la récupération des réponses. Veuillez réessayer plus tard."
+          );
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des réponses : ", error);
@@ -1618,13 +1624,14 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const data = await response.json();
-      allProfilesMessagesList.innerHTML = "";
+      if (allProfilesMessagesList) {
+        allProfilesMessagesList.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((message) => {
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("list-group-item");
-          messageItem.innerHTML = `
+        if (Array.isArray(data)) {
+          data.forEach((message) => {
+            const messageItem = document.createElement("div");
+            messageItem.classList.add("list-group-item");
+            messageItem.innerHTML = `
             <p>${message.content}</p>
             <small class="text-muted"></small>
             <div class="mt-3">
@@ -1638,14 +1645,15 @@ document.addEventListener("DOMContentLoaded", function () {
               <button class="btn btn danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
             </div>
           `;
-          allProfilesMessagesList.appendChild(messageItem);
+            allProfilesMessagesList.appendChild(messageItem);
 
-          // Chargement des réponses pour ce message
-          loadAllProfilesReplies(
-            message._id,
-            messageItem.querySelector(".repliesAllProfilesList")
-          );
-        });
+            // Chargement des réponses pour ce message
+            loadAllProfilesReplies(
+              message._id,
+              messageItem.querySelector(".repliesAllProfilesList")
+            );
+          });
+        }
 
         // Gestionnaire d'événements pour les formulaires de réponse sur tous les profils
         document.querySelectorAll(".replyAllProfilesForm").forEach((form) => {
@@ -1919,6 +1927,7 @@ document.addEventListener("DOMContentLoaded", function () {
           },
           body: JSON.stringify({
             content: message,
+            recipients: ["Rafa", "Jose"],
           }),
         });
         const data = await response.json();
@@ -1951,6 +1960,9 @@ document.addEventListener("DOMContentLoaded", function () {
               headers: {
                 "Content-Type": "application/json",
               },
+              body: JSON.stringify({
+                recipients: ["Rafa", "Jose"],
+              }),
             }
           );
           const data = await response.json();
@@ -1993,23 +2005,25 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       const data = await response.json();
-      chatWindow.innerHTML = "";
+      if (chatWindow) {
+        chatWindow.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((message) => {
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("message-item");
-          messageItem.innerHTML = `<p>${message.content}</p>
+        if (Array.isArray(data)) {
+          data.forEach((message) => {
+            const messageItem = document.createElement("div");
+            messageItem.classList.add("message-item");
+            messageItem.innerHTML = `<p>${message.content}</p>
           <small class="text-muted">${new Date(
             message.createdAt
           ).toLocaleString()}</small>`;
-          chatWindow.appendChild(messageItem);
-        });
-      } else {
-        console.error("Les données reçues ne sont pas un tableau :", data);
-        alert(
-          "Erreur lors de la récupération des messages privés. Veuillez réessayer plus tard."
-        );
+            chatWindow.appendChild(messageItem);
+          });
+        } else {
+          console.error("Les données reçues ne sont pas un tableau :", data);
+          alert(
+            "Erreur lors de la récupération des messages privés. Veuillez réessayer plus tard."
+          );
+        }
       }
     } catch (error) {
       console.error(
@@ -2062,11 +2076,11 @@ document.addEventListener("DOMContentLoaded", function () {
           allmessageInput.value = "";
           loadAllMessages();
         } else {
-          alert("Erreur lors de l'envoi du message publique : " + data.message);
+          alert("Erreur lors de l'envoi du message public : " + data.message);
         }
       } catch (error) {
-        console.error("Erreur lors de l'envoi du message publique : ", error);
-        alert("Erreur lors de l'envoi du message publique : " + error.message);
+        console.error("Erreur lors de l'envoi du message public : ", error);
+        alert("Erreur lors de l'envoi du message public : " + error.message);
       }
     });
   }
@@ -2074,7 +2088,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Suppression de la discussion publique ouverte par l'administrateur sur tous les profils
   if (alldeleteDiscussionBtn) {
     alldeleteDiscussionBtn.addEventListener("click", async function () {
-      if (confirm("Etes vous certain de supprimer cette discussion?")) {
+      if (confirm("Êtes-vous certain de supprimer cette discussion?")) {
         try {
           const response = await fetch(
             "http://localhost:3000/api/alldeleteDiscussion",
@@ -2122,38 +2136,41 @@ document.addEventListener("DOMContentLoaded", function () {
       );
 
       if (!response.ok) {
-        console.warn("Problème pour obtenir les messages publiques");
+        console.warn("Problème pour obtenir les messages publics");
         alert(
-          "Problème pour obtenir les messages publiques. Veuillez réessayer plus tard."
+          "Problème pour obtenir les messages publics. Veuillez réessayer plus tard."
         );
         return;
       }
       const data = await response.json();
-      adminChatWindow.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((message) => {
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("message-item");
-          messageItem.innerHTML = `<p>${message.content}</p>
+      if (adminChatWindow) {
+        adminChatWindow.innerHTML = "";
+
+        if (Array.isArray(data)) {
+          data.forEach((message) => {
+            const messageItem = document.createElement("div");
+            messageItem.classList.add("message-item");
+            messageItem.innerHTML = `<p>${message.content}</p>
           <small class="text-muted">${new Date(
             message.createdAt
           ).toLocaleString()}</small>`;
-          adminChatWindow.appendChild(messageItem);
-        });
-      } else {
-        console.error("Les données reçues ne sont pas un tableau :", data);
-        alert(
-          "Erreur lors de la récupération des messages publiques. Veuillez réessayer plus tard."
-        );
+            adminChatWindow.appendChild(messageItem);
+          });
+        } else {
+          console.error("Les données reçues ne sont pas un tableau");
+          alert(
+            "Erreur lors de la récupération des messages publics. Veuillez réessayer plus tard."
+          );
+        }
       }
     } catch (error) {
       console.error(
-        "Erreur lors de la récupération des messages publiques : ",
+        "Erreur lors de la récupération des messages publics : ",
         error
       );
       alert(
-        "Erreur lors de la récupération des messages publiques. Veuillez réessayer plus tard."
+        "Erreur lors de la récupération des messages publics. Veuillez réessayer plus tard."
       );
     }
   }
@@ -2174,20 +2191,22 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       const data = await response.json();
-      allUsersList.innerHTML = "";
+      if (allUsersList) {
+        allUsersList.innerHTML = "";
 
-      if (Array.isArray(data)) {
-        data.forEach((user) => {
-          const userItem = document.createElement("div");
-          userItem.classList.add("list-group-item");
-          userItem.innerHTML = `<p>${user.username}</p>`;
-          allUsersList.appendChild(userItem);
-        });
-      } else {
-        console.error("Les données reçues ne sont pas un tableau :", data);
-        alert(
-          "Erreur lors de la récupération de la liste des utilisateurs. Veuillez réessayer plus tard."
-        );
+        if (Array.isArray(data)) {
+          data.forEach((user) => {
+            const userItem = document.createElement("div");
+            userItem.classList.add("list-group-item");
+            userItem.innerHTML = `<p>${user.username}</p>`;
+            allUsersList.appendChild(userItem);
+          });
+        } else {
+          console.error("Les données reçues ne sont pas un tableau :", data);
+          alert(
+            "Erreur lors de la récupération de la liste des utilisateurs. Veuillez réessayer plus tard."
+          );
+        }
       }
     } catch (error) {
       console.error(
@@ -2199,6 +2218,7 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   }
+
   loadAllUsers();
   loadAllMessages();
 });
