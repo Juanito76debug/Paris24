@@ -1290,8 +1290,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (repliesList) {
         repliesList.innerHTML = "";
 
-        if (Array.isArray(data)) {
-          data.forEach((reply) => {
+        if (Array.isArray(data.replies) && data.replies.length > 0) {
+          data.replies.forEach((reply) => {
             const replyItem = document.createElement("div");
             replyItem.classList.add("list-group-item");
             replyItem.innerHTML = `
@@ -1300,6 +1300,14 @@ document.addEventListener("DOMContentLoaded", function () {
           `;
             repliesList.appendChild(replyItem);
           });
+        } else if (Array.isArray(data.replies) && data.replies.length === 0) {
+          console.log("Aucune réponse affiché");
+          const replyItem = document.createElement("div");
+          replyItem.classList.add("list-group-item");
+          replyItem.innerHTML = `
+            <p>Aucune réponse disponible</p>
+          `;
+          repliesList.appendChild(replyItem);
         } else {
           console.error("Les données reçues ne sont pas un tableau :", data);
           alert(
@@ -2147,8 +2155,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (adminChatWindow) {
         adminChatWindow.innerHTML = "";
 
-        if (Array.isArray(data)) {
-          data.forEach((message) => {
+        if (Array.isArray(data.messages) && data.messages.length > 0) {
+          data.messages.forEach((message) => {
             const messageItem = document.createElement("div");
             messageItem.classList.add("message-item");
             messageItem.innerHTML = `<p>${message.content}</p>
@@ -2157,8 +2165,14 @@ document.addEventListener("DOMContentLoaded", function () {
           ).toLocaleString()}</small>`;
             adminChatWindow.appendChild(messageItem);
           });
+        } else if (Array.isArray(data.messages) && data.messages.length === 0) {
+          console.log("Aucun message affiché.");
+          const messageItem = document.createElement("div");
+          messageItem.classList.add("message-item");
+          messageItem.innerHTML = "<p>Aucun message public pour le moment.</p>";
+          adminChatWindow.appendChild(messageItem);
         } else {
-          console.error("Les données reçues ne sont pas un tableau");
+          console.error("Les données reçues ne sont pas un tableau :", data);
           alert(
             "Erreur lors de la récupération des messages publics. Veuillez réessayer plus tard."
           );
@@ -2194,13 +2208,19 @@ document.addEventListener("DOMContentLoaded", function () {
       if (allUsersList) {
         allUsersList.innerHTML = "";
 
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           data.forEach((user) => {
             const userItem = document.createElement("div");
             userItem.classList.add("list-group-item");
             userItem.innerHTML = `<p>${user.username}</p>`;
             allUsersList.appendChild(userItem);
           });
+        } else if (Array.isArray(data) && data.length === 0) {
+          console.log("Aucun utilisateur trouvé.");
+          const userItem = document.createElement("div");
+          userItem.classList.add("list-group-item");
+          userItem.innerHTML = "<p>Aucun utilisateur enregistré.</p>";
+          allUsersList.appendChild(userItem);
         } else {
           console.error("Les données reçues ne sont pas un tableau :", data);
           alert(
