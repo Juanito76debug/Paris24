@@ -48,4 +48,11 @@
   padding: 10px;
   border-radius: 10px;
   background-color: #e9ecef;
+  position: relative;
+}
+
+.message-item .btn-danger {
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }
