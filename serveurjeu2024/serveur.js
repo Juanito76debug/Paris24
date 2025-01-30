@@ -1,4 +1,7 @@
 import express from "express";
+import { createServer } from "node:http";
+import { Server } from "socket.io";
+
 import path from "path";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
@@ -10,6 +13,12 @@ import { body, validationResult } from "express-validator";
 dotenv.config();
 
 const app = express();
+
+const server = createServer(app);
+
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST"] },
+});
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -1127,6 +1136,19 @@ app.delete("/api/alldeleteDiscussion", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// Connexion en temps réel avec Socket.IO
+
+io.on("connection", (socket) => {
+  console.log("Un utilisateur est connecté");
+
+  socket.on("chatMessage", (message) => {
+    io.emit("chatMessage", message);
+  });
+  socket.on("disconnect", () => {
+    console.log("Un utilisateur est déconnecté");
+  });
+});
+
+server.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}`);
 });

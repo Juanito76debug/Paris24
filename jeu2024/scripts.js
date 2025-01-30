@@ -2023,8 +2023,54 @@ document.addEventListener("DOMContentLoaded", function () {
             messageItem.innerHTML = `<p>${message.content}</p>
           <small class="text-muted">${new Date(
             message.createdAt
-          ).toLocaleString()}</small>`;
+          ).toLocaleString()}</small>
+          <button class="btn btn-danger btn-sm deleteMessageBtn" data-message-id="${
+            message._id
+          }">Supprimer</button>`;
             chatWindow.appendChild(messageItem);
+          });
+
+          // Gestionnaire d'événements pour les boutons de suppressions des messages privés chez plusieurs amis
+          document.querySelectorAll(".deleteMessageBtn").forEach((button) => {
+            button.addEventListener("click", async function () {
+              const messageId = this.getAttribute("data-message-id");
+              if (
+                confirm(
+                  "Etes-vous certain de vouloir supprimer ce message privé?"
+                )
+              ) {
+                try {
+                  const response = await fetch(
+                    `http://localhost:3000/api/messages/${messageId}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    }
+                  );
+                  const data = await response.json();
+                  if (response.ok) {
+                    alert("Suppression du message privé réussie!");
+                    loadMessages();
+                  } else {
+                    alert(
+                      "Erreur lors de la suppression du message privé : " +
+                        data.message
+                    );
+                  }
+                } catch (error) {
+                  console.error(
+                    "Erreur lors de la suppression du message privé : ",
+                    error
+                  );
+                  alert(
+                    "Erreur lors de la suppression du message privé : " +
+                      error.message
+                  );
+                }
+              }
+            });
           });
         } else {
           console.error("Les données reçues ne sont pas un tableau :", data);
@@ -2169,12 +2215,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }">supprimer</button>`;
             adminChatWindow.appendChild(messageItem);
           });
-        } else if (Array.isArray(data.messages) && data.messages.length === 0) {
-          console.log("Aucun message affiché.");
-          const messageItem = document.createElement("div");
-          messageItem.classList.add("message-item");
-          messageItem.innerHTML = "<p>Aucun message public pour le moment.</p>";
-          adminChatWindow.appendChild(messageItem);
 
           // Gestionnaire d'événements pour supprimer les messages avec un bouton sur les sujets de discussion privée dans tous les profils
           document
@@ -2287,4 +2327,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadAllUsers();
   loadAllMessages();
+});
+
+// Fonction pour gérer les messages en temps réel avec Socket.IO pour l'administrateur
+document.addEventListener("DOMContentLoaded", function () {
+  const socket = io();
+  const chatForm = document.getElementById("chatForm");
+  const chatInput = document.getElementById("chatInput");
+  const chatWindow = document.getElementById("chatWindow");
+
+  if (chatForm) {
+    chatForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (message) {
+        socket.emit("sendMessage", message);
+        chatInput.value = "";
+      }
+    });
+    socket.on("message", function (message) {
+      const messageItem = document.createElement("div");
+      messageItem.classList.add("message-item");
+      messageItem.innerHTML = `<p>${message}</p>`;
+      chatWindow.appendChild(messageItem);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
+  }
 });
