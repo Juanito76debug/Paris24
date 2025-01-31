@@ -2336,6 +2336,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const chatInput = document.getElementById("chatInput");
   const chatWindow = document.getElementById("chatWindow");
 
+  // Invitation d'un ami de l'administateur à une discussion instantanée
+
+  const inviteForm = document.getElementById("inviteForm");
+  const inviteInput = document.getElementById("inviteInput");
+  const waitingMessage = document.getElementById("waitingMessage");
+
   if (chatForm) {
     chatForm.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -2345,7 +2351,44 @@ document.addEventListener("DOMContentLoaded", function () {
         chatInput.value = "";
       }
     });
+
     socket.on("message", function (message) {
+      const messageItem = document.createElement("div");
+      messageItem.classList.add("message-item");
+      messageItem.innerHTML = `<p>${message}</p>`;
+      chatWindow.appendChild(messageItem);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
+  }
+
+  if (inviteForm) {
+    inviteForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const friendName = inviteInput.value.trim();
+      if (friendName) {
+        socket.emit("inviteFriend", friendName);
+        inviteInput.value = "";
+        waitingMessage.classList.remove("d-none");
+      }
+    });
+    socket.on("friendJoined", function (friendName) {
+      waitingMessage.classList.add("d-none");
+      chatWindow.classList.remove("d-none");
+      charForm.classList.remove("d-none");
+      const messageItem = document.createElement("div");
+      messageItem.classList.add("message-item");
+      messageItem.innerHTML = `<p>Un ami vous a invité à une discussion instantanée : ${friendName}</p>`;
+      chatWindow.appendChild(messageItem);
+    });
+    chatForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (message) {
+        socket.emit("chatMessage", message);
+        chatInput.value = "";
+      }
+    });
+    socket.on("chatMessage", function (message) {
       const messageItem = document.createElement("div");
       messageItem.classList.add("message-item");
       messageItem.innerHTML = `<p>${message}</p>`;

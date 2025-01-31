@@ -1141,6 +1141,12 @@ app.delete("/api/alldeleteDiscussion", async (req, res) => {
 io.on("connection", (socket) => {
   console.log("Un utilisateur est connecté");
 
+  //Invitation d'un ami de l'administrateur pour discussion instantanée
+  socket.on("inviteFriend", (friendName) => {
+    console.log(`${friendName} a été invité à rejoindre le chat instantanée`);
+    socket.broadcast.emit("friendJoined", friendName);
+  });
+
   socket.on("chatMessage", (message) => {
     io.emit("chatMessage", message);
   });
