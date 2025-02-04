@@ -1650,7 +1650,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <button class="btn btn-primary btn-sm">Répondre</button>
               </form>
               <div class="repliesAllProfilesList mt-3"></div>
-              <button class="btn btn danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
+              <button class="btn btn-danger btn-sm mt-2 deleteMessageBtn" data-message-id="${message._id}">Supprimer</button>
             </div>
           `;
             allProfilesMessagesList.appendChild(messageItem);
@@ -2332,23 +2332,28 @@ document.addEventListener("DOMContentLoaded", function () {
 // Fonction pour gérer les messages en temps réel avec Socket.IO pour l'administrateur
 document.addEventListener("DOMContentLoaded", function () {
   const socket = io();
-  const chatForm = document.getElementById("chatForm");
-  const chatInput = document.getElementById("chatInput");
-  const chatWindow = document.getElementById("chatWindow");
+  const chatForm1 = document.getElementById("chatForm1");
+  const chatInput1 = document.getElementById("chatInput1");
+  const chatWindow1 = document.getElementById("chatWindow1");
 
   // Invitation d'un ami de l'administateur à une discussion instantanée
 
   const inviteForm = document.getElementById("inviteForm");
   const inviteInput = document.getElementById("inviteInput");
   const waitingMessage = document.getElementById("waitingMessage");
+  const chatForm2 = document.getElementById("chatForm2");
+  const chatWindow2 = document.getElementById("chatWindow2");
+  const chatInput2 = document.getElementById("chatInput2");
+  // Status  "a rejoindre" pour l'ami de l'administrateur
+  const statusRafa = document.getElementById("statusRafa");
 
-  if (chatForm) {
-    chatForm.addEventListener("submit", function (event) {
+  if (chatForm1) {
+    chatForm1.addEventListener("submit", function (event) {
       event.preventDefault();
-      const message = chatInput.value.trim();
+      const message = chatInput1.value.trim();
       if (message) {
         socket.emit("sendMessage", message);
-        chatInput.value = "";
+        chatInput1.value = "";
       }
     });
 
@@ -2356,8 +2361,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const messageItem = document.createElement("div");
       messageItem.classList.add("message-item");
       messageItem.innerHTML = `<p>${message}</p>`;
-      chatWindow.appendChild(messageItem);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      chatWindow1.appendChild(messageItem);
+      chatWindow1.scrollTop = chatWindow.scrollHeight;
     });
   }
 
@@ -2369,31 +2374,41 @@ document.addEventListener("DOMContentLoaded", function () {
         socket.emit("inviteFriend", friendName);
         inviteInput.value = "";
         waitingMessage.classList.remove("d-none");
+        // Status "en attente" pour l'ami de l'administrateur
+        statusRafa.textContent = "En attente";
+        statusRafa.classList.replace("bg-secondary", "bg-warning");
+        // Affichage du statut en attente
+        socket.emit("statusUpdate", { status: "en attente" });
       }
     });
     socket.on("friendJoined", function (friendName) {
       waitingMessage.classList.add("d-none");
-      chatWindow.classList.remove("d-none");
-      charForm.classList.remove("d-none");
+      chatWindow2.classList.remove("d-none");
+      chatForm2.classList.remove("d-none");
+      // Status "rejoindre" pour l'ami de l'administrateur
+      statusRafa.textContent = "rejoindre";
+      statusRafa.classList.replace("bg-warning", "bg-success");
       const messageItem = document.createElement("div");
       messageItem.classList.add("message-item");
       messageItem.innerHTML = `<p>Un ami vous a invité à une discussion instantanée : ${friendName}</p>`;
-      chatWindow.appendChild(messageItem);
+      chatWindow2.appendChild(messageItem);
+      // Mail de confirmation pour l'administrateur et sn ami
+      socket.emit("sendConfirmationEmail", { friendName: friendName, chatId });
     });
-    chatForm.addEventListener("submit", function (event) {
+    chatForm2.addEventListener("submit", function (event) {
       event.preventDefault();
       const message = chatInput.value.trim();
       if (message) {
         socket.emit("chatMessage", message);
-        chatInput.value = "";
+        chatInput2.value = "";
       }
     });
     socket.on("chatMessage", function (message) {
       const messageItem = document.createElement("div");
       messageItem.classList.add("message-item");
       messageItem.innerHTML = `<p>${message}</p>`;
-      chatWindow.appendChild(messageItem);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      chatWindow2.appendChild(messageItem);
+      chatWindow2.scrollTop = chatWindow2.scrollHeight;
     });
   }
 });
