@@ -2202,61 +2202,69 @@ document.addEventListener("DOMContentLoaded", function () {
       if (adminChatWindow) {
         adminChatWindow.innerHTML = "";
 
-        if (Array.isArray(data.messages) && data.messages.length > 0) {
-          data.messages.forEach((message) => {
-            const messageItem = document.createElement("div");
-            messageItem.classList.add("message-item");
-            messageItem.innerHTML = `<p>${message.content}</p>
+        if (Array.isArray(data.messages)) {
+          if (data.messages.length > 0) {
+            data.messages.forEach((message) => {
+              const messageItem = document.createElement("div");
+              messageItem.classList.add("message-item");
+              messageItem.innerHTML = `<p>${message.content}</p>
           <small class="text-muted">${new Date(
             message.createdAt
           ).toLocaleString()}</small>
           <button class = "btn btn-danger btn-sm alldeleteMessageBtn" data-message-id="${
             message._id
           }">supprimer</button>`;
-            adminChatWindow.appendChild(messageItem);
-          });
+              adminChatWindow.appendChild(messageItem);
+            });
 
-          // Gestionnaire d'événements pour supprimer les messages avec un bouton sur les sujets de discussion privée dans tous les profils
-          document
-            .querySelectorAll(".alldeleteMessageBtn")
-            .forEach((button) => {
-              button.addEventListener("click", async function () {
-                const messageId = this.getAttribute("data-message-id");
+            // Gestionnaire d'événements pour supprimer les messages avec un bouton sur les sujets de discussion privée dans tous les profils
+            document
+              .querySelectorAll(".alldeleteMessageBtn")
+              .forEach((button) => {
+                button.addEventListener("click", async function () {
+                  const messageId = this.getAttribute("data-message-id");
 
-                if (confirm("Etes vous certain de supprimer ce message?")) {
-                  try {
-                    const response = await fetch(
-                      `http://localhost:3000/api/allProfilesMessages/${messageId}`,
-                      {
-                        method: "DELETE",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
+                  if (confirm("Etes vous certain de supprimer ce message?")) {
+                    try {
+                      const response = await fetch(
+                        `http://localhost:3000/api/allProfilesMessages/${messageId}`,
+                        {
+                          method: "DELETE",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        }
+                      );
+                      const data = await response.json();
+                      if (response.ok) {
+                        alert("Suppression du message réussie!");
+                        loadAllMessages();
+                      } else {
+                        alert(
+                          "Erreur lors de la suppression du message : " +
+                            data.message
+                        );
                       }
-                    );
-                    const data = await response.json();
-                    if (response.ok) {
-                      alert("Suppression du message réussie!");
-                      loadAllMessages();
-                    } else {
+                    } catch (error) {
+                      console.error(
+                        "Erreur lors de la suppression du message : ",
+                        error
+                      );
                       alert(
                         "Erreur lors de la suppression du message : " +
-                          data.message
+                          error.message
                       );
                     }
-                  } catch (error) {
-                    console.error(
-                      "Erreur lors de la suppression du message : ",
-                      error
-                    );
-                    alert(
-                      "Erreur lors de la suppression du message : " +
-                        error.message
-                    );
                   }
-                }
+                });
               });
-            });
+          } else {
+            console.log("Message non trouvé.");
+            const noMessageItem = document.createElement("div");
+            noMessageItem.classList.add("message-item");
+            noMessageItem.innerHTML = "<p>Aucun message affichée.</p>";
+            adminChatWindow.appendChild(noMessageItem);
+          }
         } else {
           console.error("Les données reçues ne sont pas un tableau :", data);
           alert(
