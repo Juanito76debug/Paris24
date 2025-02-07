@@ -1154,7 +1154,22 @@ io.on("connection", (socket) => {
       const friendEmail = "rafa@gmail.com";
       const subject = "Participation confirmé au chat instantanée";
       const message = `Veuillez rejoindre le chat instantanée avec l'identifiant ${chatId}.`;
-      await sendEmailConfirmation(adminEmail, friendEmail, subject, message);
+      await sendEmailConfirmation(adminEmail, subject, message);
+      await sendEmailConfirmation(friendEmail, subject, message);
+      console.log("Email envoyé avec succès aux participants");
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email :", error);
+    }
+  });
+  //Mail de confirmation entre l'administrateur et son membre confirmé  dans la liste d'ami
+  socket.on("sendConfirmationEmail", async ({ friendName, chatId }) => {
+    try {
+      const adminEmail = "juangimenez@gmail.com";
+      const friendEmail = "jose@gmail.com";
+      const subject = "Participation confirmé au chat instantanée";
+      const message = `Veuillez rejoindre le chat instantanée avec l'identifiant ${chatId}.`;
+      await sendEmailConfirmation(adminEmail, subject, message);
+      await sendEmailConfirmation(friendEmail, subject, message);
       console.log("Email envoyé avec succès aux participants");
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'email :", error);
