@@ -1150,8 +1150,8 @@ io.on("connection", (socket) => {
   //Mail de confirmation entre l'administrateur et son ami
   socket.on("sendConfirmationEmail", async ({ friendName, chatId }) => {
     try {
-      const adminEmail = "juangimenez@gmail.com";
-      const friendEmail = "rafa@gmail.com";
+      const adminEmail = "juan.gimenez@gmail.com";
+      const friendEmail = "rafa.dupont@gmail.com";
       const subject = "Participation confirmé au chat instantanée";
       const message = `Veuillez rejoindre le chat instantanée avec l'identifiant ${chatId}.`;
       await sendEmailConfirmation(adminEmail, subject, message);
@@ -1164,8 +1164,8 @@ io.on("connection", (socket) => {
   //Mail de confirmation entre l'administrateur et son membre confirmé  dans la liste d'ami
   socket.on("sendConfirmationEmail", async ({ friendName, chatId }) => {
     try {
-      const adminEmail = "juangimenez@gmail.com";
-      const friendEmail = "jose@gmail.com";
+      const adminEmail = "juan.gimenez@gmail.com";
+      const friendEmail = "jose.manso@gmail.com";
       const subject = "Participation confirmé au chat instantanée";
       const message = `Veuillez rejoindre le chat instantanée avec l'identifiant ${chatId}.`;
       await sendEmailConfirmation(adminEmail, subject, message);

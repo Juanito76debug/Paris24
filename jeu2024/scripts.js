@@ -2370,7 +2370,7 @@ document.addEventListener("DOMContentLoaded", function () {
       messageItem.classList.add("message-item");
       messageItem.innerHTML = `<p>${message}</p>`;
       chatWindow1.appendChild(messageItem);
-      chatWindow1.scrollTop = chatWindow.scrollHeight;
+      chatWindow1.scrollTop = chatWindow1.scrollHeight;
     });
   }
 
@@ -2405,7 +2405,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     chatForm2.addEventListener("submit", function (event) {
       event.preventDefault();
-      const message = chatInput.value.trim();
+      const message = chatInput2.value.trim();
       if (message) {
         socket.emit("chatMessage", message);
         chatInput2.value = "";
@@ -2417,6 +2417,88 @@ document.addEventListener("DOMContentLoaded", function () {
       messageItem.innerHTML = `<p>${message}</p>`;
       chatWindow2.appendChild(messageItem);
       chatWindow2.scrollTop = chatWindow2.scrollHeight;
+    });
+  }
+});
+
+// Invitation d'un membre confirmée de la liste d'amis de l'administateur à une discussion instantanée
+document.addEventListener("DomContentLoaded", function () {
+  const socket = io();
+  // 1er chat de l'amdinistrateur
+  const chatForm1 = document.getElementById("chatForm1");
+  const chatInput1 = document.getElementById("chatInput1");
+  const chatWindow1 = document.getElementById("chatWindow1");
+  // 2ème chat de l'amdinistrateur avec son membre confirmée.
+  const inviteForm1 = document.getElementById("inviteForm1");
+  const inviteInput1 = document.getElementById("inviteInput1");
+  const waitingMessage1 = document.getElementById("waitingMessage1");
+  const chatForm3 = document.getElementById("chatForm3");
+  const chatInput3 = document.getElementById("chatInput3");
+  const chatWindow3 = document.getElementById("chatWindow3");
+  // status à rejoindre pour le membre confirmée de la liste d'amis de l'administrateur
+  const statusJose = document.getElementById("statusJose");
+
+  if (chatForm1) {
+    chatForm1.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const message = chatInput1.value.trim();
+      if (message) {
+        socket.emit("sendMessage", message);
+        chatInput1.value = "";
+      }
+    });
+    socket.on("message", function (message) {
+      const messageItem = document.createElement("div");
+      messageItem.classList.add("message-item");
+      messageItem.innerHTML = `<p>${message}</p>`;
+      chatWindow1.appendChild(messageItem);
+      chatWindow1.scrollTop = chatWindow1.scrollHeight;
+    });
+  }
+
+  if (inviteForm1) {
+    inviteForm1.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const friendName = inviteInput1.value.trim();
+      if (friendName) {
+        socket.emit("inviteFriend", friendName);
+        inviteInput1.value = "";
+        waitingMessage1.classList.remove("d-none");
+        // status en attente pour le membre confirmée de la liste d'amis de l'administrateur
+        statusJose.textContent = "En attente";
+        statusJose.classList.replace("bg-secondary", "bg-warning");
+        // Affichage du statut en attente
+        socket.emit("statusUpdate", { status: "en attente" });
+      }
+    });
+    socket.on("friendJoined", function ({ friendName, chatId }) {
+      waitingMessage1.classList.add("d-none");
+      chatWindow3.classList.remove("d-none");
+      chatForm3.classList.remove("d-none");
+      // status rejoindre pour le membre confirmée de la liste d'amis de l'administrateur
+      statusJose.textContent = "rejoindre";
+      statusJose.classList.replace("bg-warning", "bg-success");
+      const messageItem = document.createElement("div");
+      messageItem.classList.add("message-item");
+      messageItem.innerHTML = `<p>Un ami vous a invité à une discussion instantanée : ${friendName}</p>`;
+      chatWindow3.appendChild(messageItem);
+      // Mail de confirmation pour le membre confirmée et sn ami
+      socket.emit("sendConfirmationEmail", { friendName: friendName, chatId });
+    });
+    chatForm3.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const message = chatInput3.value.trim();
+      if (message) {
+        socket.emit("chatMessage", message);
+        chatInput3.value = "";
+      }
+    });
+    socket.on("chatMessage", function (message) {
+      const messageItem = document.createElement("div");
+      messageItem.classList.add("message-item");
+      messageItem.innerHTML = `<p>${message}</p>`;
+      chatWindow3.appendChild(messageItem);
+      chatWindow3.scrollTop = chatWindow3.scrollHeight;
     });
   }
 });

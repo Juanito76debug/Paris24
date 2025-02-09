@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -141,6 +141,68 @@
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--l'administrateur invite son ami josé de sa liste d'ami confirmé à participer à une discussion instantanée-->
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">
+                  Invitations à participer à une discussion
+                </h5>
+                <ul class="list-group" id="invitationsConfirmedList">
+                  <li class="list-group-item">
+                    <img
+                      src="assets/Jose.png"
+                      alt="Jose"
+                      class="inline-image"
+                    />Jose
+                    <!--statut "En attente" pour l'ami confirmé-->
+                    <span id="statusJose" class="badge bg-secondary"
+                      >En attente</span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                chat instantanée avec son ami confirmé josé
+              </h5>
+              <form id="inviteForm1">
+                <div class="input-group mt-3">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="inviteInput1"
+                    placeholder="Votre invitation à l'ami José..."
+                  />
+                  <button type="submit" class="btn btn-primary">Inviter</button>
+                </div>
+              </form>
+              <div id="waitingMessage1" class="alert alert-info d-none">
+                Ami en attente...
+              </div>
+              <div id="chatWindow3" class="chat-window d-none"></div>
+              <form id="chatForm3" class="d-none">
+                <div class="input-group mt-3">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="chatInput3"
+                    placeholder="Votre message..."
+                  />
+                  <button type="submit" class="btn btn-primary">Envoyer</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
