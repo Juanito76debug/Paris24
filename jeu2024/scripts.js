@@ -353,6 +353,8 @@ window.onload = function () {
             <button class="btn btn-danger btn-sm deleteFriendBtn" data-friend-id="${friend._id}">Supprimer</button>
             `
                 : `
+                
+            <button class="btn btn-primary btn-sm sendFriendRequestBtn" data-friend-id="${friend._id}">Envoyer une invitation</button>
             <button class="btn btn-primary btn-sm acceptFriendRequestBtn" data-friend-id="${friend._id}">Accepter l'invitation</button>
             <button class="btn btn-primary btn-sm ignoreFriendRequestBtn" data-friend-id="${friend._id}">Ignorer l'invitation</button>
             `
