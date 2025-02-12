@@ -1328,6 +1328,8 @@ document.addEventListener("DOMContentLoaded", function () {
   loadMessages();
 });
 
+// Fonction pour publier un message dans le profil de l'ami de l'administrateur.
+
 document.addEventListener("DOMContentLoaded", function () {
   const friendPostMessageForm = document.getElementById(
     "friendPostMessageForm"
