@@ -326,7 +326,7 @@ window.onload = function () {
           alert(
             "Problème pour obtenir la liste d'amis. Veuillez réessayer plus tard "
           );
-          return;
+          return response.json();
         }
         const data = await response.json();
         friendsList.innerHTML = "";

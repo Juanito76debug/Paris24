@@ -1,0 +1,7 @@
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBwvW52JExFMjfEB+CLIWZOiklDh8zbAir+DQCp8PAte juan_@LAPTOP-8U4I3S6D
+
+https://github.com/Juanito76debug/Paris24
+
+
+https://vercel.com/juanito76debugs-projects
+

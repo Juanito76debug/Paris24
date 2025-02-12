@@ -19,11 +19,14 @@
     "express": "^4.21.1",
     "express-session": "^1.18.1",
     "express-validator": "^7.2.0",
+    "glob": "^11.0.1",
+    "inflight": "^1.0.6",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "nodemailer": "^6.9.15",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
